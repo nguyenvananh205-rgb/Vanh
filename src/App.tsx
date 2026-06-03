@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { RefrigeratorIcon, CalendarDays, ShoppingCart, Lightbulb, LayoutDashboard, RefreshCw } from "lucide-react";
+import { RefrigeratorIcon, CalendarDays, ShoppingCart, Lightbulb, LayoutDashboard, RefreshCw, Settings } from "lucide-react";
 import { useFridgeStore } from "./store";
 import type { FoodItem, MealPlan, ShoppingItem } from "./types";
 import Dashboard from "./components/Dashboard";
 import FridgeInventory from "./components/FridgeInventory";
+import ApiKeySettings from "./components/ApiKeySettings";
 import MealPlanner from "./components/MealPlanner";
 import MealSuggestions from "./components/MealSuggestions";
 import ShoppingList from "./components/ShoppingList";
@@ -22,6 +23,7 @@ type TabId = typeof TABS[number]["id"];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
+  const [showSettings, setShowSettings] = useState(false);
   const { foods, setFoods, meals, setMeals, shopping, setShopping } = useFridgeStore();
 
   const handleAddFood = (item: FoodItem) => setFoods((prev) => [...prev, item]);
@@ -67,9 +69,18 @@ export default function App() {
               <p className="text-xs text-slate-400 leading-tight">Quản lý thực phẩm thông minh</p>
             </div>
           </div>
-          <div className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded-full">
-            <RefrigeratorIcon size={12} />
-            <span>{foods.length} món</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded-full">
+              <RefrigeratorIcon size={12} />
+              <span>{foods.length} món</span>
+            </div>
+            <button
+              onClick={() => setShowSettings(true)}
+              className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+              title="Cài đặt AI"
+            >
+              <Settings size={18} className="text-slate-400" />
+            </button>
           </div>
         </div>
       </header>
@@ -139,7 +150,9 @@ export default function App() {
             onClearChecked={handleClearChecked}
           />
         )}
-        {activeTab === "sync" && (
+        {showSettings && <ApiKeySettings onClose={() => setShowSettings(false)} />}
+
+      {activeTab === "sync" && (
           <SyncData
             foods={foods}
             meals={meals}

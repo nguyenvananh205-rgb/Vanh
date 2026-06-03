@@ -10,6 +10,7 @@ import {
   EXPIRY_STYLES,
 } from "../utils";
 import FoodModal from "./FoodModal";
+import SmartAddModal from "./SmartAddModal";
 
 interface Props {
   foods: FoodItem[];
@@ -19,7 +20,8 @@ interface Props {
 }
 
 export default function FridgeInventory({ foods, onAdd, onUpdate, onDelete }: Props) {
-  const [showModal, setShowModal] = useState(false);
+  const [showSmartAdd, setShowSmartAdd] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [editing, setEditing] = useState<FoodItem | null>(null);
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState<FoodCategory | "all">("all");
@@ -45,13 +47,9 @@ export default function FridgeInventory({ foods, onAdd, onUpdate, onDelete }: Pr
     soon: foods.filter((f) => getExpiryStatus(f.expiryDate) === "soon").length,
   }), [foods]);
 
-  const handleSave = (item: FoodItem) => {
-    if (editing) {
-      onUpdate(item);
-    } else {
-      onAdd(item);
-    }
-    setShowModal(false);
+  const handleEditSave = (item: FoodItem) => {
+    onUpdate(item);
+    setShowEditModal(false);
     setEditing(null);
   };
 
@@ -100,7 +98,7 @@ export default function FridgeInventory({ foods, onAdd, onUpdate, onDelete }: Pr
           ))}
         </select>
         <button
-          onClick={() => { setEditing(null); setShowModal(true); }}
+          onClick={() => setShowSmartAdd(true)}
           className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
           <Plus size={16} /> Thêm thực phẩm
@@ -154,7 +152,7 @@ export default function FridgeInventory({ foods, onAdd, onUpdate, onDelete }: Pr
                 </div>
                 <div className="flex gap-1 shrink-0">
                   <button
-                    onClick={() => { setEditing(food); setShowModal(true); }}
+                    onClick={() => { setEditing(food); setShowEditModal(true); }}
                     className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500 hover:text-slate-700"
                   >
                     <Pencil size={15} />
@@ -172,11 +170,18 @@ export default function FridgeInventory({ foods, onAdd, onUpdate, onDelete }: Pr
         </div>
       )}
 
-      {showModal && (
+      {showSmartAdd && (
+        <SmartAddModal
+          onSave={onAdd}
+          onClose={() => setShowSmartAdd(false)}
+        />
+      )}
+
+      {showEditModal && editing && (
         <FoodModal
           item={editing}
-          onSave={handleSave}
-          onClose={() => { setShowModal(false); setEditing(null); }}
+          onSave={handleEditSave}
+          onClose={() => { setShowEditModal(false); setEditing(null); }}
         />
       )}
     </div>
