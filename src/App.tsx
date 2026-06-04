@@ -9,6 +9,8 @@ import MealPlanner from "./components/MealPlanner";
 import MealSuggestions from "./components/MealSuggestions";
 import ShoppingList from "./components/ShoppingList";
 import SyncData from "./components/SyncData";
+import InstallBanner from "./components/InstallBanner";
+import { useNotifications } from "./hooks/useNotifications";
 
 const TABS = [
   { id: "dashboard", label: "Tổng quan", icon: LayoutDashboard },
@@ -45,6 +47,7 @@ export default function App() {
   };
 
   const uncheckedShopping = shopping.filter((i) => !i.checked).length;
+  const { requestPermission } = useNotifications(foods);
 
   const TAB_TITLES: Record<TabId, string> = {
     dashboard: "Tổng quan",
@@ -84,6 +87,8 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      <InstallBanner onRequestNotifications={requestPermission} />
 
       {/* Tab nav */}
       <nav className="bg-white border-b border-slate-100 sticky top-14 z-30">
