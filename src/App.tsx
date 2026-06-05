@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RefrigeratorIcon, CalendarDays, ShoppingCart, Lightbulb, LayoutDashboard, RefreshCw, Settings } from "lucide-react";
+import { RefrigeratorIcon, CalendarDays, ShoppingCart, Lightbulb, LayoutDashboard, RefreshCw, Settings, FileText } from "lucide-react";
 import { useFridgeStore } from "./store";
 import type { FoodItem, MealPlan, ShoppingItem } from "./types";
 import Dashboard from "./components/Dashboard";
@@ -10,6 +10,7 @@ import MealSuggestions from "./components/MealSuggestions";
 import ShoppingList from "./components/ShoppingList";
 import SyncData from "./components/SyncData";
 import InstallBanner from "./components/InstallBanner";
+import PrdGenerator from "./components/PrdGenerator";
 import { useNotifications } from "./hooks/useNotifications";
 
 const TABS = [
@@ -19,6 +20,7 @@ const TABS = [
   { id: "planner", label: "Kế hoạch", icon: CalendarDays },
   { id: "shopping", label: "Mua sắm", icon: ShoppingCart },
   { id: "sync", label: "Đồng bộ", icon: RefreshCw },
+  { id: "prd", label: "PRD Tool", icon: FileText },
 ] as const;
 
 type TabId = typeof TABS[number]["id"];
@@ -56,6 +58,7 @@ export default function App() {
     planner: "Kế hoạch bữa ăn",
     shopping: "Danh sách mua sắm",
     sync: "Đồng bộ dữ liệu",
+    prd: "PRD Generator",
   };
 
   return (
@@ -164,6 +167,7 @@ export default function App() {
             onClearChecked={handleClearChecked}
           />
         )}
+        {activeTab === "prd" && <PrdGenerator />}
         {showSettings && <ApiKeySettings onClose={() => setShowSettings(false)} />}
 
       {activeTab === "sync" && (
