@@ -16,14 +16,14 @@ export interface FoodItem {
   quantity: number;
   unit: string;
   category: FoodCategory;
-  purchaseDate: string; // ISO date string
-  expiryDate: string;   // ISO date string
+  purchaseDate: string;
+  expiryDate: string;
   notes?: string;
 }
 
 export interface MealPlan {
   id: string;
-  date: string; // ISO date string
+  date: string;
   type: MealType;
   mealName: string;
   ingredientIds: string[];
@@ -39,3 +39,60 @@ export interface ShoppingItem {
 }
 
 export type ExpiryStatus = "expired" | "critical" | "soon" | "ok";
+
+// ── Recipe system ──────────────────────────────────────────────
+export type RecipePurpose = "com_gia_dinh" | "healthy" | "dac_biet";
+export type DishRole = "canh" | "rau" | "chinh" | "phu";
+
+export interface RecipeIngredient {
+  name: string;
+  quantity: number;
+  unit: string;
+  optional?: boolean;
+}
+
+export interface Recipe {
+  id: string;
+  name: string;
+  purpose: RecipePurpose;
+  role: DishRole;
+  ingredients: RecipeIngredient[];
+  cookTime: number; // minutes
+  servings: number;
+  notes?: string;
+}
+
+export interface MissingIngredient {
+  name: string;
+  quantity: number;
+  unit: string;
+  forRecipe: string;
+  optional: boolean;
+}
+
+export interface IngredientMatch {
+  ingredient: RecipeIngredient;
+  fridgeItem: FoodItem | null;
+  isPartial: boolean; // in fridge but qty < needed
+}
+
+export interface ScoredRecipe {
+  recipe: Recipe;
+  matches: IngredientMatch[];
+  availableCount: number;
+  totalRequired: number;
+  score: number; // 0–100
+  expiryBonus: number;
+}
+
+export interface ScoredCombo {
+  id: string;
+  purpose: RecipePurpose;
+  canh: ScoredRecipe;
+  rau: ScoredRecipe;
+  chinh: ScoredRecipe;
+  phu: ScoredRecipe;
+  totalScore: number;
+  missingIngredients: MissingIngredient[];
+}
+

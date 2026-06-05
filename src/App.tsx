@@ -26,7 +26,7 @@ type TabId = typeof TABS[number]["id"];
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [showSettings, setShowSettings] = useState(false);
-  const { foods, setFoods, meals, setMeals, shopping, setShopping } = useFridgeStore();
+  const { foods, setFoods, meals, setMeals, shopping, setShopping, recipes, setRecipes } = useFridgeStore();
 
   const handleAddFood = (item: FoodItem) => setFoods((prev) => [...prev, item]);
   const handleUpdateFood = (item: FoodItem) => setFoods((prev) => prev.map((f) => f.id === item.id ? item : f));
@@ -137,7 +137,16 @@ export default function App() {
             onDelete={handleDeleteFood}
           />
         )}
-        {activeTab === "suggestions" && <MealSuggestions foods={foods} />}
+        {activeTab === "suggestions" && (
+          <MealSuggestions
+            foods={foods}
+            recipes={recipes}
+            onCook={setFoods}
+            onAddShopping={(items) => setShopping((prev) => [...prev, ...items])}
+            onAddFood={handleAddFood}
+            onSaveRecipes={setRecipes}
+          />
+        )}
         {activeTab === "planner" && (
           <MealPlanner
             foods={foods}

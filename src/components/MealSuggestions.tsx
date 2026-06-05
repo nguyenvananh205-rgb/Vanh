@@ -1,95 +1,191 @@
-import { useMemo } from "react";
-import { Lightbulb, Clock } from "lucide-react";
-import type { FoodItem } from "../types";
-import { getExpiryStatus, getDaysUntilExpiry } from "../utils";
+import { useMemo, useState } from "react";
+import { Lightbulb, ChefHat, ShoppingCart, UtensilsCrossed, BookOpen, Clock, Users, AlertCircle } from "lucide-react";
+import type { FoodItem, Recipe, RecipePurpose, ScoredCombo, ShoppingItem } from "../types";
+import { suggestMeals } from "../utils/mealScorer";
+import { getDaysUntilExpiry, getExpiryStatus } from "../utils";
+import CookModal from "./CookModal";
+import ReadyFoodModal from "./ReadyFoodModal";
+import RecipeManager from "./RecipeManager";
 
 interface Props {
   foods: FoodItem[];
+  recipes: Recipe[];
+  onCook: (updatedFoods: FoodItem[]) => void;
+  onAddShopping: (items: ShoppingItem[]) => void;
+  onAddFood: (item: FoodItem) => void;
+  onSaveRecipes: (recipes: Recipe[]) => void;
 }
 
-interface SuggestedMeal {
-  name: string;
-  tags: string[];
-  usesItems: FoodItem[];
-  priority: number; // higher = more urgent (uses expiring items)
-  cookTime: string;
+const PURPOSE_LABELS: Record<RecipePurpose, string> = {
+  com_gia_dinh: "🏠 Cơm gia đình",
+  healthy: "🥗 Healthy",
+  dac_biet: "✨ Đặc biệt",
+};
+
+const PURPOSES: RecipePurpose[] = ["com_gia_dinh", "healthy", "dac_biet"];
+
+const ROLE_COLORS = {
+  canh: "bg-blue-50 text-blue-700 border-blue-200",
+  rau: "bg-green-50 text-green-700 border-green-200",
+  chinh: "bg-orange-50 text-orange-700 border-orange-200",
+  phu: "bg-purple-50 text-purple-700 border-purple-200",
+};
+
+const ROLE_LABELS = { canh: "Canh", rau: "Rau", chinh: "Chính", phu: "Phụ" };
+
+function ScoreBar({ score }: { score: number }) {
+  const pct = Math.min(100, Math.round(score));
+  const color = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-400" : "bg-red-400";
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-xs font-medium text-slate-600 w-8 text-right">{pct}%</span>
+    </div>
+  );
 }
 
-// Simple matching rules: keyword → food name patterns
-const MEAL_RECIPES: { name: string; tags: string[]; keywords: string[]; cookTime: string }[] = [
-  { name: "Thịt kho trứng", tags: ["bữa tối", "cơm"], keywords: ["thịt", "trứng", "thịt lợn", "thịt heo"], cookTime: "40 phút" },
-  { name: "Cá hấp gừng hành", tags: ["bữa tối", "healthy"], keywords: ["cá", "gừng"], cookTime: "25 phút" },
-  { name: "Canh rau củ", tags: ["bữa trưa", "healthy"], keywords: ["cà rốt", "bắp cải", "khoai", "bí", "rau"], cookTime: "20 phút" },
-  { name: "Gà xào sả ớt", tags: ["bữa tối"], keywords: ["gà", "thịt gà"], cookTime: "30 phút" },
-  { name: "Bò xào bông cải", tags: ["bữa tối"], keywords: ["thịt bò", "bò", "bông cải", "súp lơ"], cookTime: "20 phút" },
-  { name: "Đậu phụ sốt cà chua", tags: ["bữa trưa", "chay"], keywords: ["đậu phụ", "đậu hũ", "cà chua"], cookTime: "15 phút" },
-  { name: "Trứng chiên rau củ", tags: ["bữa trưa", "nhanh"], keywords: ["trứng", "hành", "cà rốt"], cookTime: "10 phút" },
-  { name: "Cơm rang dưa bò", tags: ["bữa trưa", "cơm", "nhanh"], keywords: ["cơm", "trứng"], cookTime: "15 phút" },
-  { name: "Canh chua cá", tags: ["bữa tối"], keywords: ["cá", "cà chua", "giá"], cookTime: "25 phút" },
-  { name: "Rau muống xào tỏi", tags: ["bữa tối", "rau"], keywords: ["rau muống", "rau"], cookTime: "10 phút" },
-  { name: "Súp bí đỏ", tags: ["tráng miệng", "bữa trưa"], keywords: ["bí đỏ", "bí"], cookTime: "30 phút" },
-  { name: "Gà luộc chấm muối chanh", tags: ["bữa tối"], keywords: ["gà", "chanh"], cookTime: "40 phút" },
-  { name: "Bún thịt nướng", tags: ["bữa trưa"], keywords: ["thịt lợn", "thịt heo", "bún"], cookTime: "45 phút" },
-  { name: "Bánh flan", tags: ["tráng miệng"], keywords: ["trứng", "sữa"], cookTime: "60 phút" },
-  { name: "Hoa quả dầm", tags: ["tráng miệng"], keywords: ["dưa hấu", "xoài", "chuối", "dâu"], cookTime: "10 phút" },
-  { name: "Chè đậu xanh", tags: ["tráng miệng"], keywords: ["đậu xanh", "đường"], cookTime: "45 phút" },
-  { name: "Thịt heo luộc chấm mắm", tags: ["bữa tối"], keywords: ["thịt lợn", "thịt heo"], cookTime: "30 phút" },
-  { name: "Canh khổ qua nhồi thịt", tags: ["bữa tối"], keywords: ["khổ qua", "mướp đắng", "thịt"], cookTime: "35 phút" },
-];
+function ComboCard({
+  combo,
+  onCook,
+  onAddShopping,
+}: {
+  combo: ScoredCombo;
+  onCook: (combo: ScoredCombo) => void;
+  onAddShopping: (combo: ScoredCombo) => void;
+}) {
+  const dishes = [
+    { role: "canh" as const, scored: combo.canh },
+    { role: "rau" as const, scored: combo.rau },
+    { role: "chinh" as const, scored: combo.chinh },
+    { role: "phu" as const, scored: combo.phu },
+  ];
 
-export default function MealSuggestions({ foods }: Props) {
-  const suggestions = useMemo<SuggestedMeal[]>(() => {
-    if (foods.length === 0) return [];
-
-    const availableFoods = foods.filter((f) => getExpiryStatus(f.expiryDate) !== "expired");
-
-    return MEAL_RECIPES.map((recipe) => {
-      const usesItems: FoodItem[] = [];
-
-      availableFoods.forEach((food) => {
-        const matches = recipe.keywords.some((kw) =>
-          food.name.toLowerCase().includes(kw.toLowerCase())
-        );
-        if (matches) usesItems.push(food);
-      });
-
-      if (usesItems.length === 0) return null;
-
-      // Priority: more expiring items used = higher priority
-      const priority = usesItems.reduce((sum, f) => {
-        const status = getExpiryStatus(f.expiryDate);
-        if (status === "critical") return sum + 10;
-        if (status === "soon") return sum + 5;
-        return sum + 1;
-      }, 0);
-
-      return { name: recipe.name, tags: recipe.tags, usesItems, priority, cookTime: recipe.cookTime };
-    })
-      .filter(Boolean)
-      .sort((a, b) => b!.priority - a!.priority)
-      .slice(0, 8) as SuggestedMeal[];
-  }, [foods]);
-
-  const urgentFoods = foods.filter((f) => {
-    const s = getExpiryStatus(f.expiryDate);
-    return s === "critical" || s === "soon";
-  }).sort((a, b) => getDaysUntilExpiry(a.expiryDate) - getDaysUntilExpiry(b.expiryDate));
+  const totalCookTime = dishes.reduce((s, d) => s + d.scored.recipe.cookTime, 0);
+  const missingRequired = combo.missingIngredients.filter((m) => !m.optional);
+  const canCookNow = missingRequired.length === 0;
 
   return (
-    <div className="space-y-6">
-      {/* Urgent use */}
+    <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+      {/* Score header */}
+      <div className="px-4 pt-4 pb-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <Clock size={12} />
+            <span>~{totalCookTime} phút</span>
+            <Users size={12} className="ml-1" />
+            <span>{combo.canh.recipe.servings} người</span>
+          </div>
+          <div className={`text-xs font-semibold px-2 py-0.5 rounded-full ${canCookNow ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+            {canCookNow ? "✓ Đủ nguyên liệu" : `Thiếu ${missingRequired.length} món`}
+          </div>
+        </div>
+        <ScoreBar score={combo.totalScore} />
+      </div>
+
+      {/* Dish grid */}
+      <div className="px-4 pb-3 grid grid-cols-2 gap-2">
+        {dishes.map(({ role, scored }) => {
+          const missing = scored.matches.filter((m) => !m.fridgeItem && !m.ingredient.optional).length;
+          return (
+            <div key={role} className={`border rounded-xl px-3 py-2.5 ${ROLE_COLORS[role]}`}>
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-[10px] font-semibold uppercase tracking-wide opacity-70">{ROLE_LABELS[role]}</span>
+                {missing > 0 && <span className="text-[10px] opacity-70">−{missing}</span>}
+              </div>
+              <p className="text-xs font-semibold leading-tight">{scored.recipe.name}</p>
+              <p className="text-[10px] opacity-60 mt-0.5">{scored.availableCount}/{scored.totalRequired} nguyên liệu</p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Missing ingredients */}
+      {missingRequired.length > 0 && (
+        <div className="mx-4 mb-3 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+          <p className="text-xs font-medium text-red-700 mb-1.5 flex items-center gap-1">
+            <AlertCircle size={11} /> Cần mua thêm:
+          </p>
+          <div className="flex flex-wrap gap-1">
+            {missingRequired.map((m, i) => (
+              <span key={i} className="text-xs bg-white border border-red-200 text-red-700 px-2 py-0.5 rounded-full">
+                {m.name} ({m.quantity} {m.unit})
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="px-4 pb-4 flex gap-2">
+        {missingRequired.length > 0 && (
+          <button
+            onClick={() => onAddShopping(combo)}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 border-2 border-slate-200 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            <ShoppingCart size={13} />
+            Thêm vào giỏ
+          </button>
+        )}
+        <button
+          onClick={() => onCook(combo)}
+          className="flex-[2] flex items-center justify-center gap-1.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-semibold transition-colors"
+        >
+          <ChefHat size={13} />
+          Nấu bữa này
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function MealSuggestions({ foods, recipes, onCook, onAddShopping, onAddFood, onSaveRecipes }: Props) {
+  const [activePurpose, setActivePurpose] = useState<RecipePurpose>("com_gia_dinh");
+  const [cookingCombo, setCookingCombo] = useState<ScoredCombo | null>(null);
+  const [showReadyFood, setShowReadyFood] = useState(false);
+  const [showRecipeManager, setShowRecipeManager] = useState(false);
+
+  const suggestionsByPurpose = useMemo(() => suggestMeals(recipes, foods), [recipes, foods]);
+
+  const urgentFoods = foods
+    .filter((f) => {
+      const s = getExpiryStatus(f.expiryDate);
+      return s === "critical" || s === "soon";
+    })
+    .sort((a, b) => getDaysUntilExpiry(a.expiryDate) - getDaysUntilExpiry(b.expiryDate));
+
+  const combos = suggestionsByPurpose[activePurpose] ?? [];
+
+  const handleAddShoppingFromCombo = (combo: ScoredCombo) => {
+    const items: ShoppingItem[] = combo.missingIngredients
+      .filter((m) => !m.optional)
+      .map((m) => ({
+        id: Math.random().toString(36).slice(2),
+        name: m.name,
+        quantity: m.quantity,
+        unit: m.unit,
+        category: "khac" as const,
+        checked: false,
+      }));
+    onAddShopping(items);
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Urgent alert */}
       {urgentFoods.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <h3 className="font-semibold text-amber-800 mb-3 flex items-center gap-2">
+          <h3 className="font-semibold text-amber-800 mb-2 flex items-center gap-2 text-sm">
             <span>⚡</span> Cần dùng sớm
           </h3>
           <div className="flex flex-wrap gap-2">
             {urgentFoods.map((f) => {
               const days = getDaysUntilExpiry(f.expiryDate);
               return (
-                <span key={f.id} className="bg-white border border-amber-200 rounded-lg px-3 py-1.5 text-sm">
+                <span key={f.id} className="bg-white border border-amber-200 rounded-lg px-2.5 py-1 text-sm">
                   <span className="font-medium text-slate-700">{f.name}</span>
-                  <span className="text-amber-600 ml-1">
+                  <span className="text-amber-600 ml-1 text-xs">
                     {days <= 0 ? "(hôm nay!)" : `(còn ${days}n)`}
                   </span>
                 </span>
@@ -99,75 +195,105 @@ export default function MealSuggestions({ foods }: Props) {
         </div>
       )}
 
-      {/* Suggestions */}
-      <div>
-        <h3 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
-          <Lightbulb size={18} className="text-emerald-500" />
-          Gợi ý món ăn từ tủ lạnh của bạn
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <h3 className="font-semibold text-slate-700 flex items-center gap-1.5 text-sm">
+          <Lightbulb size={16} className="text-emerald-500" />
+          Gợi ý bữa ăn hôm nay
         </h3>
-
-        {suggestions.length === 0 ? (
-          <div className="text-center py-12 text-slate-400">
-            <Lightbulb size={40} className="mx-auto mb-2 opacity-30" />
-            <p className="text-sm">Thêm thực phẩm vào tủ để nhận gợi ý món ăn</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {suggestions.map((s, i) => (
-              <div key={i} className="bg-white border border-slate-100 rounded-xl p-4 hover:shadow-sm transition-shadow">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-semibold text-slate-800">{s.name}</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Clock size={12} className="text-slate-400" />
-                      <span className="text-xs text-slate-500">{s.cookTime}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1 justify-end">
-                    {s.tags.map((tag) => (
-                      <span key={tag} className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">{tag}</span>
-                    ))}
-                  </div>
-                </div>
-
-                {s.usesItems.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-slate-50">
-                    <p className="text-xs text-slate-500 mb-1.5">Nguyên liệu trong tủ:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {s.usesItems.map((item) => {
-                        const status = getExpiryStatus(item.expiryDate);
-                        return (
-                          <span
-                            key={item.id}
-                            className={`text-xs px-2 py-0.5 rounded border ${
-                              status === "critical" ? "border-orange-300 bg-orange-50 text-orange-700" :
-                              status === "soon" ? "border-yellow-300 bg-yellow-50 text-yellow-700" :
-                              "border-slate-200 bg-slate-50 text-slate-600"
-                            }`}
-                          >
-                            {item.name}
-                            {(status === "critical" || status === "soon") && " ⚡"}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowReadyFood(true)}
+            className="flex items-center gap-1 text-xs border border-slate-200 px-2.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            <UtensilsCrossed size={13} />
+            Đồ ăn sẵn
+          </button>
+          <button
+            onClick={() => setShowRecipeManager(true)}
+            className="flex items-center gap-1 text-xs border border-slate-200 px-2.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            <BookOpen size={13} />
+            Công thức ({recipes.length})
+          </button>
+        </div>
       </div>
 
+      {/* Purpose tabs */}
+      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+        {PURPOSES.map((p) => (
+          <button
+            key={p}
+            onClick={() => setActivePurpose(p)}
+            className={`flex-1 text-xs py-2 px-1 rounded-lg font-medium transition-colors ${
+              activePurpose === p ? "bg-white shadow-sm text-emerald-700" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            {PURPOSE_LABELS[p]}
+          </button>
+        ))}
+      </div>
+
+      {/* Combo cards */}
+      {combos.length === 0 ? (
+        <div className="text-center py-12 text-slate-400">
+          <ChefHat size={40} className="mx-auto mb-3 opacity-30" />
+          <p className="text-sm font-medium">Chưa đủ công thức</p>
+          <p className="text-xs mt-1">Cần ít nhất 1 công thức cho mỗi loại: Canh, Rau, Chính, Phụ</p>
+          <button
+            onClick={() => setShowRecipeManager(true)}
+            className="mt-4 text-xs text-emerald-600 border border-emerald-200 px-4 py-2 rounded-lg hover:bg-emerald-50 transition-colors"
+          >
+            Quản lý công thức
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {combos.map((combo) => (
+            <ComboCard
+              key={combo.id}
+              combo={combo}
+              onCook={setCookingCombo}
+              onAddShopping={handleAddShoppingFromCombo}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Footer tips */}
       <div className="bg-slate-50 rounded-xl p-4 text-sm text-slate-600">
-        <p className="font-medium mb-1">💡 Mẹo lên thực đơn tuần</p>
+        <p className="font-medium mb-1.5 text-xs">💡 Cách đọc điểm gợi ý</p>
         <ul className="space-y-1 text-xs text-slate-500">
-          <li>• Ưu tiên nấu các món dùng nguyên liệu sắp hết hạn (⚡)</li>
-          <li>• Đồ nấu chín còn dư có thể dùng cho bữa trưa hôm sau</li>
-          <li>• Đặt kế hoạch 4 bữa tối + 2 bữa trưa mỗi tuần</li>
-          <li>• Mua sắm 1-2 lần/tuần dựa trên danh sách thiếu</li>
+          <li>• Điểm cao = nhiều nguyên liệu có sẵn trong tủ</li>
+          <li>• Ưu tiên dùng đồ sắp hết hạn (⚡)</li>
+          <li>• Nhấn "Nấu bữa này" để trừ nguyên liệu khỏi tủ</li>
+          <li>• Có đồ ăn dư? Nhấn "Đồ ăn sẵn" để thêm vào tủ</li>
         </ul>
       </div>
+
+      {/* Modals */}
+      {cookingCombo && (
+        <CookModal
+          combo={cookingCombo}
+          foods={foods}
+          onCook={onCook}
+          onAddShopping={onAddShopping}
+          onClose={() => setCookingCombo(null)}
+        />
+      )}
+      {showReadyFood && (
+        <ReadyFoodModal
+          onAdd={onAddFood}
+          onClose={() => setShowReadyFood(false)}
+        />
+      )}
+      {showRecipeManager && (
+        <RecipeManager
+          recipes={recipes}
+          onSave={onSaveRecipes}
+          onClose={() => setShowRecipeManager(false)}
+        />
+      )}
     </div>
   );
 }
