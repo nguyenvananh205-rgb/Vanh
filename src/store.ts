@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { FoodItem, MealPlan, ShoppingItem, Recipe } from "./types";
 import { DEFAULT_RECIPES } from "./data/defaultRecipes";
+import { DEFAULT_FOODS } from "./data/defaultFoods";
 
 const KEYS = {
   foods: "fridge_foods",
@@ -23,7 +24,7 @@ function save<T>(key: string, value: T) {
 }
 
 export function useFridgeStore() {
-  const [foods, setFoodsRaw] = useState<FoodItem[]>(() => load(KEYS.foods, []));
+  const [foods, setFoodsRaw] = useState<FoodItem[]>(() => load(KEYS.foods, null) ?? DEFAULT_FOODS);
   const [meals, setMealsRaw] = useState<MealPlan[]>(() => load(KEYS.meals, []));
   const [shopping, setShoppingRaw] = useState<ShoppingItem[]>(() => load(KEYS.shopping, []));
   const [recipes, setRecipesRaw] = useState<Recipe[]>(() => load(KEYS.recipes, null) ?? DEFAULT_RECIPES);
