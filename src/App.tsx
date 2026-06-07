@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RefrigeratorIcon, CalendarDays, ShoppingCart, Lightbulb, LayoutDashboard, RefreshCw, Settings } from "lucide-react";
+import { RefrigeratorIcon, CalendarDays, ShoppingCart, Lightbulb, LayoutDashboard, RefreshCw, Settings, MessageSquare } from "lucide-react";
 import { useFridgeStore } from "./store";
 import type { FoodItem, MealPlan, ShoppingItem } from "./types";
 import Dashboard from "./components/Dashboard";
@@ -10,6 +10,7 @@ import MealSuggestions from "./components/MealSuggestions";
 import ShoppingList from "./components/ShoppingList";
 import SyncData from "./components/SyncData";
 import InstallBanner from "./components/InstallBanner";
+import SlackAnalysis from "./components/SlackAnalysis";
 import { useNotifications } from "./hooks/useNotifications";
 
 const TABS = [
@@ -19,6 +20,7 @@ const TABS = [
   { id: "planner", label: "Kế hoạch", icon: CalendarDays },
   { id: "shopping", label: "Mua sắm", icon: ShoppingCart },
   { id: "sync", label: "Đồng bộ", icon: RefreshCw },
+  { id: "slack", label: "Phân tích Slack", icon: MessageSquare },
 ] as const;
 
 type TabId = typeof TABS[number]["id"];
@@ -57,6 +59,7 @@ export default function App() {
     planner: "Kế hoạch bữa ăn",
     shopping: "Danh sách mua sắm",
     sync: "Đồng bộ dữ liệu",
+    slack: "Phân tích Slack → Use Cases",
   };
 
   return (
@@ -169,6 +172,7 @@ export default function App() {
             onClearChecked={handleClearChecked}
           />
         )}
+        {activeTab === "slack" && <SlackAnalysis />}
         {showSettings && <ApiKeySettings onClose={() => setShowSettings(false)} />}
 
       {activeTab === "sync" && (
