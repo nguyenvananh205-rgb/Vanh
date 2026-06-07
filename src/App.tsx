@@ -36,6 +36,7 @@ export default function App() {
   const handleDeleteMeal = (id: string) => setMeals((prev) => prev.filter((m) => m.id !== id));
 
   const handleAddShopping = (item: ShoppingItem) => setShopping((prev) => [...prev, item]);
+  const handleAddManyShopping = (items: ShoppingItem[]) => setShopping((prev) => [...prev, ...items]);
   const handleToggleShopping = (id: string) => setShopping((prev) => prev.map((i) => i.id === id ? { ...i, checked: !i.checked } : i));
   const handleDeleteShopping = (id: string) => setShopping((prev) => prev.filter((i) => i.id !== id));
   const handleClearChecked = () => setShopping((prev) => prev.filter((i) => !i.checked));
@@ -158,7 +159,11 @@ export default function App() {
         {activeTab === "shopping" && (
           <ShoppingList
             items={shopping}
+            foods={foods}
+            meals={meals}
+            recipes={recipes}
             onAdd={handleAddShopping}
+            onAddMany={handleAddManyShopping}
             onToggle={handleToggleShopping}
             onDelete={handleDeleteShopping}
             onClearChecked={handleClearChecked}

@@ -48,7 +48,7 @@ function normalize(s: string): string {
   return s.toLowerCase().trim();
 }
 
-function canonicalize(name: string): string {
+export function canonicalize(name: string): string {
   const n = normalize(name);
   // Try exact match first
   if (synonymMap.has(n)) return synonymMap.get(n)!;
