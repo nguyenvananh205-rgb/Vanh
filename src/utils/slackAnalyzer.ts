@@ -27,7 +27,11 @@ export interface SlackAnalysisResult {
   userStories: UserStory[];
 }
 
-async function callClaude(prompt: string, systemPrompt: string, maxTokens = 4096): Promise<string> {
+async function callClaude(
+  prompt: string,
+  systemPrompt: string,
+  maxTokens = 4096
+): Promise<string> {
   const apiKey = getApiKey();
   if (!apiKey) throw new Error("NO_API_KEY");
 
@@ -56,63 +60,68 @@ async function callClaude(prompt: string, systemPrompt: string, maxTokens = 4096
   return data.content?.[0]?.text ?? "";
 }
 
-export async function summarizeSlackConversation(conversation: string): Promise<string> {
-  const system = `Bạn là chuyên gia phân tích yêu cầu phần mềm. Tóm tắt hội thoại Slack thành nội dung có cấu trúc rõ ràng, tập trung vào yêu cầu kỹ thuật và nghiệp vụ. Trả lời bằng tiếng Việt.`;
+export async function summarizeConversations(formattedText: string): Promise<string> {
+  const system = `Bạn là chuyên gia phân tích yêu cầu phần mềm. Nhiệm vụ: tóm tắt hội thoại Slack thành tài liệu yêu cầu có cấu trúc. Trả lời bằng tiếng Việt, dùng định dạng Markdown.`;
 
-  const prompt = `Tóm tắt đoạn hội thoại Slack sau thành nội dung có cấu trúc:
+  const prompt = `Tóm tắt các hội thoại Slack sau thành nội dung phân tích yêu cầu có cấu trúc:
 
-## Đoạn hội thoại:
-${conversation}
+## Hội thoại:
+${formattedText}
 
-## Yêu cầu đầu ra (dùng định dạng Markdown):
-1. **Bối cảnh dự án** - Mô tả ngắn gọn về dự án/hệ thống đang thảo luận
-2. **Vấn đề / Nhu cầu** - Liệt kê các vấn đề và nhu cầu được đề cập
-3. **Tính năng được yêu cầu** - Các tính năng, chức năng cụ thể
-4. **Quyết định quan trọng** - Các quyết định kỹ thuật/nghiệp vụ đã thống nhất
-5. **Điểm cần làm rõ** - Những gì còn mơ hồ hoặc cần thảo luận thêm`;
+## Yêu cầu đầu ra (Markdown):
+### 1. Bối cảnh dự án
+Mô tả ngắn gọn dự án/hệ thống đang thảo luận.
+
+### 2. Vấn đề & Nhu cầu
+Liệt kê các vấn đề cụ thể được đề cập.
+
+### 3. Tính năng được yêu cầu
+Danh sách các tính năng, chức năng cần xây dựng.
+
+### 4. Quyết định đã thống nhất
+Các quyết định kỹ thuật hoặc nghiệp vụ đã được đồng ý.
+
+### 5. Điểm cần làm rõ
+Những vấn đề còn mơ hồ, chưa có quyết định rõ ràng.`;
 
   return callClaude(prompt, system, 2048);
 }
 
-export async function generateUseCasesAndStories(summary: string): Promise<SlackAnalysisResult> {
-  const system = `Bạn là chuyên gia phân tích và thiết kế hệ thống phần mềm theo chuẩn Agile/UML. Chỉ trả về JSON thuần túy, không có markdown code fence, không có giải thích thêm.`;
+export async function generateUseCasesAndStories(
+  summary: string
+): Promise<SlackAnalysisResult> {
+  const system = `Bạn là chuyên gia phân tích hệ thống theo chuẩn Agile/UML. Chỉ trả về JSON thuần túy, không có markdown code fence, không giải thích.`;
 
-  const prompt = `Dựa trên nội dung tóm tắt dưới đây, tạo Use Cases và User Stories đầy đủ cho dự án.
+  const prompt = `Dựa trên nội dung phân tích dưới đây, tạo Use Cases và User Stories chuẩn Agile.
 
-## Nội dung tóm tắt:
+## Nội dung phân tích:
 ${summary}
 
-Trả về JSON với cấu trúc chính xác sau (chỉ JSON, không \`\`\`json):
+Trả về JSON với cấu trúc chính xác (chỉ JSON, không có \`\`\`):
 {
   "summary": "tóm tắt 1-2 câu về dự án",
-  "projectContext": "bối cảnh và mục tiêu chính của dự án",
+  "projectContext": "bối cảnh và mục tiêu chính",
   "useCases": [
     {
       "id": "UC-001",
-      "name": "Tên use case ngắn gọn",
-      "actor": "Người dùng hoặc hệ thống thực hiện",
-      "precondition": "Điều kiện cần có trước khi thực hiện",
-      "mainFlow": [
-        "1. Bước đầu tiên",
-        "2. Bước tiếp theo",
-        "3. Hệ thống phản hồi"
-      ],
-      "alternativeFlow": [
-        "1a. Trường hợp ngoại lệ: ..."
-      ],
-      "postcondition": "Kết quả đạt được sau khi hoàn thành"
+      "name": "Tên use case",
+      "actor": "Người dùng hoặc hệ thống",
+      "precondition": "Điều kiện tiên quyết",
+      "mainFlow": ["1. Bước 1", "2. Bước 2", "3. Bước 3"],
+      "alternativeFlow": ["1a. Trường hợp ngoại lệ"],
+      "postcondition": "Kết quả đạt được"
     }
   ],
   "userStories": [
     {
       "id": "US-001",
-      "role": "tên vai trò người dùng",
-      "goal": "mục tiêu cụ thể muốn đạt được",
-      "benefit": "lợi ích mang lại cho người dùng hoặc doanh nghiệp",
+      "role": "tên vai trò",
+      "goal": "mục tiêu cụ thể",
+      "benefit": "lợi ích mang lại",
       "acceptanceCriteria": [
-        "GIVEN ... WHEN ... THEN ...",
-        "Tiêu chí xác nhận cụ thể 2",
-        "Tiêu chí xác nhận cụ thể 3"
+        "GIVEN [bối cảnh] WHEN [hành động] THEN [kết quả]",
+        "Tiêu chí 2",
+        "Tiêu chí 3"
       ],
       "priority": "must",
       "storyPoints": 3
@@ -121,22 +130,21 @@ Trả về JSON với cấu trúc chính xác sau (chỉ JSON, không \`\`\`json
 }
 
 Quy tắc:
-- Tạo ít nhất 3 use cases và 5 user stories
-- priority: "must" (bắt buộc), "should" (nên có), "could" (có thể có)
-- storyPoints: 1, 2, 3, 5, 8, 13 theo Fibonacci
-- Mọi nội dung bằng tiếng Việt`;
+- Ít nhất 3 use cases và 5 user stories
+- priority: "must" | "should" | "could"
+- storyPoints: 1, 2, 3, 5, 8, 13
+- Tất cả nội dung bằng tiếng Việt`;
 
   const text = await callClaude(prompt, system, 4096);
-  const jsonText = text.replace(/```(?:json)?[\s\S]*?```/g, (m) => m.replace(/```(?:json)?/g, "").trim()).trim();
+
+  // Strip markdown fences if present
+  const cleaned = text.replace(/^```(?:json)?\s*/m, "").replace(/\s*```$/m, "").trim();
 
   try {
-    return JSON.parse(jsonText) as SlackAnalysisResult;
+    return JSON.parse(cleaned) as SlackAnalysisResult;
   } catch {
-    // Try to extract JSON object from response
-    const match = jsonText.match(/\{[\s\S]*\}/);
-    if (match) {
-      return JSON.parse(match[0]) as SlackAnalysisResult;
-    }
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (match) return JSON.parse(match[0]) as SlackAnalysisResult;
     throw new Error("Không thể phân tích kết quả từ AI. Vui lòng thử lại.");
   }
 }
