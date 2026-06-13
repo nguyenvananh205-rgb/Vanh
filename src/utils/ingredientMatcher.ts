@@ -80,7 +80,7 @@ export function namesMatch(ingredientName: string, fridgeName: string): boolean 
 
 // Unit conversion: trả về số lượng quy đổi về cùng đơn vị cơ bản
 const TO_BASE: Record<string, number> = {
-  kg: 1000, gram: 1, g: 1, gam: 1,
+  kg: 1000, gram: 1, g: 1, gam: 1, lạng: 100,
   lít: 1000, lit: 1000, ml: 1,
 };
 

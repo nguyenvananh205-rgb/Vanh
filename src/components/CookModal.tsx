@@ -14,7 +14,7 @@ interface Props {
 
 const ROLE_LABELS = { canh: "🍲 Canh", rau: "🥦 Rau", chinh: "🥩 Chính", phu: "🍳 Phụ" };
 
-const TO_BASE: Record<string, number> = { kg: 1000, gram: 1, g: 1, gam: 1, lít: 1000, lit: 1000, ml: 1 };
+const TO_BASE: Record<string, number> = { kg: 1000, gram: 1, g: 1, gam: 1, lạng: 100, lít: 1000, lit: 1000, ml: 1 };
 function toBase(qty: number, unit: string) { return (TO_BASE[unit.toLowerCase()] ?? 1) * qty; }
 
 export default function CookModal({ combo, foods, onCook, onAddShopping, onClose }: Props) {

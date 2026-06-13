@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import type { FoodItem, FoodCategory, FoodLocation } from "../types";
-import { CATEGORY_LABELS, LOCATION_LABELS, LOCATION_ORDER, generateId, todayISO } from "../utils";
+import { CATEGORY_LABELS, LOCATION_LABELS, LOCATION_ORDER, generateId, todayISO, getSmartUnit } from "../utils";
 
 interface Props {
   item?: FoodItem | null;
@@ -9,7 +9,7 @@ interface Props {
   onClose: () => void;
 }
 
-const UNITS = ["gram", "kg", "ml", "lít", "hộp", "cái", "bó", "ổ", "quả", "túi", "lon", "chai", "tép", "củ", "miếng"];
+const UNITS = ["lạng", "gram", "kg", "ml", "lít", "hộp", "cái", "bó", "ổ", "quả", "túi", "lon", "chai", "tép", "củ", "miếng", "cây"];
 
 export default function FoodModal({ item, onSave, onClose }: Props) {
   const [name, setName] = useState("");
@@ -67,7 +67,15 @@ export default function FoodModal({ item, onSave, onClose }: Props) {
             <label className="block text-sm font-medium text-slate-700 mb-1">Tên thực phẩm *</label>
             <input
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setName(val);
+                if (!item) { // only auto-fill on new items
+                  const smart = getSmartUnit(val);
+                  setUnit(smart.unit);
+                  setQuantity(smart.quantity);
+                }
+              }}
               placeholder="Ví dụ: Thịt gà, Cà chua..."
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
               required

@@ -93,3 +93,25 @@ export const EXPIRY_STYLES: Record<ExpiryStatus, { row: string; badge: string; l
 export function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
+
+// Smart unit + default quantity based on Vietnamese food name patterns
+export function getSmartUnit(name: string): { unit: string; quantity: number } {
+  const n = name.toLowerCase().trim();
+  if (/thịt|heo|lợn|bò|gà|vịt|ngan|chim/.test(n))           return { unit: "lạng", quantity: 5 };
+  if (/cá|tôm|mực|bạch tuộc|cua|ghẹ|sò/.test(n))            return { unit: "gram", quantity: 300 };
+  if (/rau|cải|muống|ngót|xà lách|húng|mùi|rau thơm/.test(n)) return { unit: "bó", quantity: 1 };
+  if (/hành lá|hành xanh/.test(n))                            return { unit: "bó", quantity: 1 };
+  if (/cà rốt|khoai|củ cải|ngó sen|su su|bí đao/.test(n))    return { unit: "củ", quantity: 3 };
+  if (/hành tây/.test(n))                                      return { unit: "củ", quantity: 2 };
+  if (/tỏi|gừng/.test(n))                                     return { unit: "củ", quantity: 1 };
+  if (/sả/.test(n))                                           return { unit: "cây", quantity: 3 };
+  if (/trứng/.test(n))                                        return { unit: "quả", quantity: 6 };
+  if (/đậu phụ|đậu hũ|tofu/.test(n))                         return { unit: "miếng", quantity: 2 };
+  if (/ớt|cà chua|chanh|cam|bưởi/.test(n))                   return { unit: "quả", quantity: 4 };
+  if (/khổ qua|mướp|bí đỏ|bắp cải/.test(n))                 return { unit: "gram", quantity: 300 };
+  if (/dứa|thơm|khóm|xoài|ổi|táo|lê/.test(n))               return { unit: "quả", quantity: 1 };
+  if (/đậu đũa|đậu que|giá đỗ/.test(n))                      return { unit: "gram", quantity: 200 };
+  if (/nước|sữa|dầu|mắm|tương|xì dầu/.test(n))              return { unit: "ml", quantity: 200 };
+  if (/gạo|bột|đường|muối|miến|bún khô/.test(n))            return { unit: "gram", quantity: 500 };
+  return { unit: "gram", quantity: 100 };
+}

@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { X, Mic, MicOff, Camera, PenLine, Loader2, CheckCircle2, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import type { FoodItem, FoodCategory, FoodLocation } from "../types";
-import { CATEGORY_LABELS, LOCATION_LABELS, LOCATION_ORDER, generateId, todayISO } from "../utils";
+import { CATEGORY_LABELS, LOCATION_LABELS, LOCATION_ORDER, generateId, todayISO, getSmartUnit } from "../utils";
 import { useVoiceInput } from "../hooks/useVoiceInput";
 import { parseVoiceInput } from "../utils/voiceParser";
 import { analyzeImage, getApiKey } from "../utils/visionParser";
@@ -10,7 +10,7 @@ import type { ParsedFood } from "../utils/voiceParser";
 type Mode = "pick" | "voice" | "camera" | "manual";
 type Step = "input" | "confirm";
 
-const UNITS = ["gram", "kg", "ml", "lít", "hộp", "cái", "bó", "ổ", "quả", "túi", "lon", "chai", "miếng", "con", "phần"];
+const UNITS = ["lạng", "gram", "kg", "ml", "lít", "hộp", "cái", "bó", "ổ", "quả", "túi", "lon", "chai", "miếng", "con", "phần", "củ", "cây"];
 
 const EXPIRY_SHORTCUTS = [
   { label: "1 ngày", days: 1 },
@@ -64,7 +64,16 @@ function ConfirmForm({ initial, onSave, onBack, imagePreview }: ConfirmFormProps
         <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Tên thực phẩm *</label>
         <input
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value;
+            setName(val);
+            // Only auto-fill if voice/camera didn't already set qty/unit
+            if (!initial.quantity && !initial.unit) {
+              const smart = getSmartUnit(val);
+              setUnit(smart.unit);
+              setQuantity(smart.quantity);
+            }
+          }}
           placeholder="Tên thực phẩm..."
           autoFocus
           className="mt-1 w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-base font-medium focus:outline-none focus:border-emerald-400 transition-colors"
