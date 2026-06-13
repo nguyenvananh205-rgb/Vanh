@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, UtensilsCrossed } from "lucide-react";
-import type { FoodItem } from "../types";
-import { generateId, todayISO } from "../utils";
+import type { FoodItem, FoodLocation } from "../types";
+import { LOCATION_LABELS, LOCATION_ORDER, generateId, todayISO } from "../utils";
 
 interface Props {
   onAdd: (item: FoodItem) => void;
@@ -25,6 +25,7 @@ export default function ReadyFoodModal({ onAdd, onClose }: Props) {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [unit, setUnit] = useState("phần");
+  const [location, setLocation] = useState<FoodLocation>("ngan_lanh");
   const [expiryDate, setExpiryDate] = useState(addDays(2));
   const [notes, setNotes] = useState("");
 
@@ -36,6 +37,7 @@ export default function ReadyFoodModal({ onAdd, onClose }: Props) {
       quantity: parseFloat(quantity) || 1,
       unit,
       category: "do_nau_chin",
+      location,
       expiryDate,
       purchaseDate: todayISO(),
       notes: notes.trim() || undefined,
@@ -97,6 +99,26 @@ export default function ReadyFoodModal({ onAdd, onClose }: Props) {
                 <option value="gram">gram</option>
                 <option value="kg">kg</option>
               </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1.5">Vị trí lưu trữ</label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {LOCATION_ORDER.map((loc) => (
+                <button
+                  key={loc}
+                  type="button"
+                  onClick={() => setLocation(loc)}
+                  className={`py-2 px-3 rounded-xl text-xs font-medium border-2 transition-colors text-left ${
+                    location === loc
+                      ? "border-amber-400 bg-amber-50 text-amber-700"
+                      : "border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-300"
+                  }`}
+                >
+                  {LOCATION_LABELS[loc]}
+                </button>
+              ))}
             </div>
           </div>
 

@@ -1,5 +1,5 @@
 import { differenceInDays, parseISO, format, isValid } from "date-fns";
-import type { ExpiryStatus, FoodCategory } from "./types";
+import type { ExpiryStatus, FoodCategory, FoodLocation } from "./types";
 
 export function getExpiryStatus(expiryDate: string): ExpiryStatus {
   const today = new Date();
@@ -50,6 +50,22 @@ export const CATEGORY_COLORS: Record<FoodCategory, string> = {
   trang_miem: "bg-pink-100 text-pink-700",
   khac: "bg-slate-100 text-slate-700",
 };
+
+export const LOCATION_LABELS: Record<FoodLocation, string> = {
+  ngan_da:   "❄️ Ngăn đá",
+  ngan_lanh: "🧊 Ngăn lạnh",
+  tu_mat:    "🌡️ Tủ mát",
+  ngoai_tu:  "📦 Ngoài tủ",
+};
+
+export const LOCATION_COLORS: Record<FoodLocation, string> = {
+  ngan_da:   "bg-cyan-100 text-cyan-700",
+  ngan_lanh: "bg-blue-100 text-blue-700",
+  tu_mat:    "bg-teal-100 text-teal-700",
+  ngoai_tu:  "bg-slate-100 text-slate-600",
+};
+
+export const LOCATION_ORDER: FoodLocation[] = ["ngan_da", "ngan_lanh", "tu_mat", "ngoai_tu"];
 
 export const EXPIRY_STYLES: Record<ExpiryStatus, { row: string; badge: string; label: string }> = {
   expired: {

@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { X, Mic, MicOff, Camera, PenLine, Loader2, CheckCircle2, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
-import type { FoodItem, FoodCategory } from "../types";
-import { CATEGORY_LABELS, generateId, todayISO } from "../utils";
+import type { FoodItem, FoodCategory, FoodLocation } from "../types";
+import { CATEGORY_LABELS, LOCATION_LABELS, LOCATION_ORDER, generateId, todayISO } from "../utils";
 import { useVoiceInput } from "../hooks/useVoiceInput";
 import { parseVoiceInput } from "../utils/voiceParser";
 import { analyzeImage, getApiKey } from "../utils/visionParser";
@@ -46,6 +46,7 @@ function ConfirmForm({ initial, onSave, onBack, imagePreview }: ConfirmFormProps
   const [quantity, setQuantity] = useState(initial.quantity ?? 1);
   const [unit, setUnit] = useState(initial.unit ?? "gram");
   const [category, setCategory] = useState<FoodCategory>(initial.category ?? "khac");
+  const [location, setLocation] = useState<FoodLocation>("ngan_lanh");
   const [expiryDate, setExpiryDate] = useState(initial.expiryDate ?? "");
   const [showMore, setShowMore] = useState(false);
   const [purchaseDate] = useState(todayISO());
@@ -111,6 +112,27 @@ function ConfirmForm({ initial, onSave, onBack, imagePreview }: ConfirmFormProps
               }`}
             >
               {v.split(" ").map((w, i) => <span key={i} className="block">{w}</span>)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Location */}
+      <div>
+        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Vị trí lưu trữ</label>
+        <div className="mt-1 grid grid-cols-2 gap-1.5">
+          {LOCATION_ORDER.map((loc) => (
+            <button
+              key={loc}
+              type="button"
+              onClick={() => setLocation(loc)}
+              className={`py-2 px-3 rounded-xl text-xs font-medium border-2 transition-colors text-left ${
+                location === loc
+                  ? "border-emerald-400 bg-emerald-50 text-emerald-700"
+                  : "border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-300"
+              }`}
+            >
+              {LOCATION_LABELS[loc]}
             </button>
           ))}
         </div>
@@ -194,6 +216,7 @@ function ConfirmForm({ initial, onSave, onBack, imagePreview }: ConfirmFormProps
               quantity,
               unit,
               category,
+              location,
               purchaseDate,
               expiryDate,
             })

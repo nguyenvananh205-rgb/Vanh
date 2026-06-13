@@ -1,3 +1,5 @@
+export type FoodLocation = "ngan_lanh" | "ngan_da" | "tu_mat" | "ngoai_tu";
+
 export type FoodCategory =
   | "thit_ca"
   | "rau_cu"
@@ -18,6 +20,7 @@ export interface FoodItem {
   category: FoodCategory;
   purchaseDate: string;
   expiryDate: string;
+  location?: FoodLocation;
   notes?: string;
 }
 

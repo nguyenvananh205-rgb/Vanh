@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import type { FoodItem, FoodCategory } from "../types";
-import { CATEGORY_LABELS, generateId, todayISO } from "../utils";
+import type { FoodItem, FoodCategory, FoodLocation } from "../types";
+import { CATEGORY_LABELS, LOCATION_LABELS, LOCATION_ORDER, generateId, todayISO } from "../utils";
 
 interface Props {
   item?: FoodItem | null;
@@ -9,13 +9,14 @@ interface Props {
   onClose: () => void;
 }
 
-const UNITS = ["gram", "kg", "ml", "lít", "hộp", "cái", "bó", "ổ", "quả", "túi", "lon", "chai"];
+const UNITS = ["gram", "kg", "ml", "lít", "hộp", "cái", "bó", "ổ", "quả", "túi", "lon", "chai", "tép", "củ", "miếng"];
 
 export default function FoodModal({ item, onSave, onClose }: Props) {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [unit, setUnit] = useState("gram");
   const [category, setCategory] = useState<FoodCategory>("khac");
+  const [location, setLocation] = useState<FoodLocation>("ngan_lanh");
   const [purchaseDate, setPurchaseDate] = useState(todayISO());
   const [expiryDate, setExpiryDate] = useState("");
   const [notes, setNotes] = useState("");
@@ -26,6 +27,7 @@ export default function FoodModal({ item, onSave, onClose }: Props) {
       setQuantity(item.quantity);
       setUnit(item.unit);
       setCategory(item.category);
+      setLocation(item.location ?? "ngan_lanh");
       setPurchaseDate(item.purchaseDate);
       setExpiryDate(item.expiryDate);
       setNotes(item.notes ?? "");
@@ -41,6 +43,7 @@ export default function FoodModal({ item, onSave, onClose }: Props) {
       quantity,
       unit,
       category,
+      location,
       purchaseDate,
       expiryDate,
       notes: notes.trim() || undefined,
@@ -49,8 +52,8 @@ export default function FoodModal({ item, onSave, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-5 border-b">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-5 border-b sticky top-0 bg-white z-10">
           <h2 className="text-lg font-semibold text-slate-800">
             {item ? "Chỉnh sửa thực phẩm" : "Thêm thực phẩm"}
           </h2>
@@ -88,10 +91,31 @@ export default function FoodModal({ item, onSave, onClose }: Props) {
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white"
               >
                 {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
               </select>
+            </div>
+          </div>
+
+          {/* Location */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Vị trí lưu trữ</label>
+            <div className="grid grid-cols-2 gap-2">
+              {LOCATION_ORDER.map((loc) => (
+                <button
+                  key={loc}
+                  type="button"
+                  onClick={() => setLocation(loc)}
+                  className={`py-2 px-3 rounded-xl text-sm font-medium border-2 transition-colors text-left ${
+                    location === loc
+                      ? "border-emerald-400 bg-emerald-50 text-emerald-700"
+                      : "border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-300"
+                  }`}
+                >
+                  {LOCATION_LABELS[loc]}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -100,7 +124,7 @@ export default function FoodModal({ item, onSave, onClose }: Props) {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as FoodCategory)}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white"
             >
               {(Object.entries(CATEGORY_LABELS) as [FoodCategory, string][]).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
@@ -135,7 +159,7 @@ export default function FoodModal({ item, onSave, onClose }: Props) {
             <input
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ví dụ: Ngăn dưới cùng, đã mở gói..."
+              placeholder="Ví dụ: Đã mở gói, ngăn trên..."
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
           </div>
