@@ -43,7 +43,7 @@ interface ConfirmFormProps {
 
 function ConfirmForm({ initial, onSave, onBack, imagePreview }: ConfirmFormProps) {
   const [name, setName] = useState(initial.name ?? "");
-  const [quantity, setQuantity] = useState(initial.quantity ?? 1);
+  const [quantityStr, setQuantityStr] = useState(String(initial.quantity ?? 1));
   const [unit, setUnit] = useState(initial.unit ?? "gram");
   const [category, setCategory] = useState<FoodCategory>(initial.category ?? "khac");
   const [location, setLocation] = useState<FoodLocation>("ngan_lanh");
@@ -71,7 +71,7 @@ function ConfirmForm({ initial, onSave, onBack, imagePreview }: ConfirmFormProps
             if (!initial.quantity && !initial.unit) {
               const smart = getSmartUnit(val);
               setUnit(smart.unit);
-              setQuantity(smart.quantity);
+              setQuantityStr(String(smart.quantity));
             }
           }}
           placeholder="Tên thực phẩm..."
@@ -88,8 +88,8 @@ function ConfirmForm({ initial, onSave, onBack, imagePreview }: ConfirmFormProps
             type="number"
             min="0.1"
             step="0.1"
-            value={quantity}
-            onChange={(e) => setQuantity(parseFloat(e.target.value) || 1)}
+            value={quantityStr}
+            onChange={(e) => setQuantityStr(e.target.value)}
             className="mt-1 w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-base font-medium focus:outline-none focus:border-emerald-400"
           />
         </div>
@@ -222,7 +222,7 @@ function ConfirmForm({ initial, onSave, onBack, imagePreview }: ConfirmFormProps
             onSave({
               id: generateId(),
               name: name.trim(),
-              quantity,
+              quantity: parseFloat(quantityStr) || 1,
               unit,
               category,
               location,

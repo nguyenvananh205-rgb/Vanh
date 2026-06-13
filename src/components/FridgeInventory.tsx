@@ -14,13 +14,12 @@ import {
 } from "../utils";
 import { useVoiceInput } from "../hooks/useVoiceInput";
 import FoodModal from "./FoodModal";
-import SmartAddModal from "./SmartAddModal";
 
 interface Props {
   foods: FoodItem[];
-  onAdd: (item: FoodItem) => void;
   onUpdate: (item: FoodItem) => void;
   onDelete: (id: string) => void;
+  onOpenAdd: () => void;
 }
 
 const LOCATION_SECTION_STYLE: Record<FoodLocation, string> = {
@@ -108,8 +107,7 @@ function BulkUpdateModal({
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-export default function FridgeInventory({ foods, onAdd, onUpdate, onDelete }: Props) {
-  const [showSmartAdd, setShowSmartAdd] = useState(false);
+export default function FridgeInventory({ foods, onUpdate, onDelete, onOpenAdd }: Props) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editing, setEditing] = useState<FoodItem | null>(null);
   const [search, setSearch] = useState("");
@@ -266,7 +264,7 @@ export default function FridgeInventory({ foods, onAdd, onUpdate, onDelete }: Pr
               <CheckSquare size={15} /> Chọn
             </button>
             <button
-              onClick={() => setShowSmartAdd(true)}
+              onClick={onOpenAdd}
               className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             >
               <Plus size={16} /> Thêm
@@ -360,7 +358,6 @@ export default function FridgeInventory({ foods, onAdd, onUpdate, onDelete }: Pr
       )}
 
       {/* Modals */}
-      {showSmartAdd && <SmartAddModal onSave={onAdd} onClose={() => setShowSmartAdd(false)} />}
       {showEditModal && editing && (
         <FoodModal item={editing} onSave={handleEditSave} onClose={() => { setShowEditModal(false); setEditing(null); }} />
       )}

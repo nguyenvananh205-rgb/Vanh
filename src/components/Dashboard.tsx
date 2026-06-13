@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { RefrigeratorIcon, AlertTriangle, CalendarCheck, ShoppingCart, TrendingDown } from "lucide-react";
+import { RefrigeratorIcon, AlertTriangle, CalendarCheck, ShoppingCart, TrendingDown, Plus } from "lucide-react";
 import type { FoodItem, MealPlan } from "../types";
 import { getExpiryStatus, getDaysUntilExpiry, CATEGORY_LABELS, EXPIRY_STYLES } from "../utils";
 import { startOfWeek, endOfWeek, parseISO } from "date-fns";
@@ -9,9 +9,10 @@ interface Props {
   meals: MealPlan[];
   shoppingCount: number;
   onTabChange: (tab: string) => void;
+  onAddFood: () => void;
 }
 
-export default function Dashboard({ foods, meals, shoppingCount, onTabChange }: Props) {
+export default function Dashboard({ foods, meals, shoppingCount, onTabChange, onAddFood }: Props) {
   const stats = useMemo(() => {
     const total = foods.length;
     const expired = foods.filter((f) => getExpiryStatus(f.expiryDate) === "expired").length;
@@ -43,6 +44,16 @@ export default function Dashboard({ foods, meals, shoppingCount, onTabChange }: 
 
   return (
     <div className="space-y-6">
+      {/* Quick-add CTA */}
+      <button
+        onClick={onAddFood}
+        className="w-full flex items-center justify-center gap-2.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white py-3.5 rounded-2xl font-semibold text-sm transition-all active:scale-95 shadow-md"
+        style={{ boxShadow: "0 4px 16px rgba(16,185,129,0.35)" }}
+      >
+        <Plus size={20} />
+        Thêm thực phẩm vào tủ lạnh
+      </button>
+
       {/* Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard
@@ -125,7 +136,7 @@ export default function Dashboard({ foods, meals, shoppingCount, onTabChange }: 
           <p className="font-semibold text-lg text-slate-500">Chào mừng đến với Quản lý Tủ lạnh!</p>
           <p className="text-sm mt-1">Bắt đầu bằng cách thêm thực phẩm vào tủ lạnh của bạn</p>
           <button
-            onClick={() => onTabChange("fridge")}
+            onClick={onAddFood}
             className="mt-4 bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors"
           >
             Thêm thực phẩm đầu tiên

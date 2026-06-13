@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RefrigeratorIcon, CalendarDays, ShoppingCart, Lightbulb, LayoutDashboard, RefreshCw, Settings } from "lucide-react";
+import { RefrigeratorIcon, CalendarDays, ShoppingCart, Lightbulb, LayoutDashboard, RefreshCw, Settings, Plus } from "lucide-react";
 import { useFridgeStore } from "./store";
 import type { FoodItem, MealPlan, ShoppingItem } from "./types";
 import Dashboard from "./components/Dashboard";
@@ -10,6 +10,7 @@ import MealSuggestions from "./components/MealSuggestions";
 import ShoppingList from "./components/ShoppingList";
 import SyncData from "./components/SyncData";
 import InstallBanner from "./components/InstallBanner";
+import SmartAddModal from "./components/SmartAddModal";
 import { useNotifications } from "./hooks/useNotifications";
 
 const TABS = [
@@ -26,9 +27,13 @@ type TabId = typeof TABS[number]["id"];
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [showSettings, setShowSettings] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const { foods, setFoods, meals, setMeals, shopping, setShopping, recipes, setRecipes } = useFridgeStore();
 
-  const handleAddFood = (item: FoodItem) => setFoods((prev) => [...prev, item]);
+  const handleAddFood = (item: FoodItem) => {
+    setFoods((prev) => [...prev, item]);
+    setShowAddModal(false);
+  };
   const handleUpdateFood = (item: FoodItem) => setFoods((prev) => prev.map((f) => f.id === item.id ? item : f));
   const handleDeleteFood = (id: string) => setFoods((prev) => prev.filter((f) => f.id !== id));
 
@@ -59,6 +64,8 @@ export default function App() {
     sync: "Đồng bộ dữ liệu",
   };
 
+  const showFab = activeTab === "dashboard" || activeTab === "fridge";
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -74,10 +81,13 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded-full">
-              <RefrigeratorIcon size={12} />
-              <span>{foods.length} món</span>
-            </div>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-sm font-medium transition-colors"
+            >
+              <Plus size={16} />
+              Thêm
+            </button>
             <button
               onClick={() => setShowSettings(true)}
               className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
@@ -119,7 +129,7 @@ export default function App() {
       </nav>
 
       {/* Main content */}
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-4 py-6 pb-28">
         <h2 className="text-xl font-bold text-slate-800 mb-5">{TAB_TITLES[activeTab]}</h2>
 
         {activeTab === "dashboard" && (
@@ -128,14 +138,15 @@ export default function App() {
             meals={meals}
             shoppingCount={uncheckedShopping}
             onTabChange={(tab) => setActiveTab(tab as TabId)}
+            onAddFood={() => setShowAddModal(true)}
           />
         )}
         {activeTab === "fridge" && (
           <FridgeInventory
             foods={foods}
-            onAdd={handleAddFood}
             onUpdate={handleUpdateFood}
             onDelete={handleDeleteFood}
+            onOpenAdd={() => setShowAddModal(true)}
           />
         )}
         {activeTab === "suggestions" && (
@@ -169,9 +180,7 @@ export default function App() {
             onClearChecked={handleClearChecked}
           />
         )}
-        {showSettings && <ApiKeySettings onClose={() => setShowSettings(false)} />}
-
-      {activeTab === "sync" && (
+        {activeTab === "sync" && (
           <SyncData
             foods={foods}
             meals={meals}
@@ -180,6 +189,28 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* FAB — visible on dashboard & fridge */}
+      {showFab && (
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="fixed bottom-6 right-4 z-40 flex items-center gap-2.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white pl-4 pr-5 py-3.5 rounded-2xl shadow-xl font-semibold text-sm transition-all active:scale-95"
+          style={{ boxShadow: "0 4px 20px rgba(16,185,129,0.45)" }}
+        >
+          <Plus size={20} />
+          Thêm thực phẩm
+        </button>
+      )}
+
+      {/* Global SmartAddModal */}
+      {showAddModal && (
+        <SmartAddModal
+          onSave={handleAddFood}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
+
+      {showSettings && <ApiKeySettings onClose={() => setShowSettings(false)} />}
     </div>
   );
 }

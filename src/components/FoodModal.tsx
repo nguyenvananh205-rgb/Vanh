@@ -13,7 +13,7 @@ const UNITS = ["lạng", "gram", "kg", "ml", "lít", "hộp", "cái", "bó", "�
 
 export default function FoodModal({ item, onSave, onClose }: Props) {
   const [name, setName] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState("1");
   const [unit, setUnit] = useState("gram");
   const [category, setCategory] = useState<FoodCategory>("khac");
   const [location, setLocation] = useState<FoodLocation>("ngan_lanh");
@@ -24,7 +24,7 @@ export default function FoodModal({ item, onSave, onClose }: Props) {
   useEffect(() => {
     if (item) {
       setName(item.name);
-      setQuantity(item.quantity);
+      setQuantity(String(item.quantity));
       setUnit(item.unit);
       setCategory(item.category);
       setLocation(item.location ?? "ngan_lanh");
@@ -40,7 +40,7 @@ export default function FoodModal({ item, onSave, onClose }: Props) {
     onSave({
       id: item?.id ?? generateId(),
       name: name.trim(),
-      quantity,
+      quantity: parseFloat(quantity) || 1,
       unit,
       category,
       location,
@@ -73,7 +73,7 @@ export default function FoodModal({ item, onSave, onClose }: Props) {
                 if (!item) { // only auto-fill on new items
                   const smart = getSmartUnit(val);
                   setUnit(smart.unit);
-                  setQuantity(smart.quantity);
+                  setQuantity(String(smart.quantity));
                 }
               }}
               placeholder="Ví dụ: Thịt gà, Cà chua..."
@@ -90,7 +90,7 @@ export default function FoodModal({ item, onSave, onClose }: Props) {
                 min="0.1"
                 step="0.1"
                 value={quantity}
-                onChange={(e) => setQuantity(parseFloat(e.target.value) || 1)}
+                onChange={(e) => setQuantity(e.target.value)}
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
             </div>
