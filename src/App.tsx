@@ -67,23 +67,23 @@ export default function App() {
   const showFab = activeTab === "dashboard" || activeTab === "fridge";
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-100 sticky top-0 z-40">
+    <div className="fridge-bg">
+      {/* Header — stainless steel exterior */}
+      <header className="fridge-header sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-              <RefrigeratorIcon size={18} className="text-white" />
+            <div className="w-9 h-9 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
+              <RefrigeratorIcon size={19} className="text-white" />
             </div>
             <div>
-              <h1 className="text-base font-bold text-slate-800 leading-tight">Tủ lạnh gia đình</h1>
-              <p className="text-xs text-slate-400 leading-tight">Quản lý thực phẩm thông minh</p>
+              <h1 className="text-base font-bold text-slate-800 leading-tight tracking-tight">Tủ lạnh gia đình</h1>
+              <p className="text-[11px] text-slate-400 leading-tight">Quản lý thực phẩm thông minh</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-sm font-medium transition-colors"
+              className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-sm font-medium transition-all active:scale-95 shadow-sm"
             >
               <Plus size={16} />
               Thêm
@@ -101,18 +101,18 @@ export default function App() {
 
       <InstallBanner onRequestNotifications={requestPermission} />
 
-      {/* Tab nav */}
-      <nav className="bg-white border-b border-slate-100 sticky top-14 z-30">
-        <div className="max-w-4xl mx-auto px-4 overflow-x-auto">
+      {/* Tab nav — door compartment rail */}
+      <nav className="fridge-tabs sticky top-[57px] z-30">
+        <div className="max-w-4xl mx-auto px-4 overflow-x-auto scrollbar-hide">
           <div className="flex gap-0 min-w-max">
             {TABS.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setActiveTab(id)}
-                className={`relative flex items-center gap-1.5 px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
+                className={`relative flex items-center gap-1.5 px-4 py-3 text-sm font-medium transition-all whitespace-nowrap ${
                   activeTab === id
-                    ? "text-emerald-600 border-b-2 border-emerald-500"
-                    : "text-slate-500 hover:text-slate-700 border-b-2 border-transparent"
+                    ? "text-emerald-600 border-b-2 border-emerald-500 bg-emerald-50/60"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-slate-50/80 border-b-2 border-transparent"
                 }`}
               >
                 <Icon size={15} />
@@ -126,68 +126,72 @@ export default function App() {
             ))}
           </div>
         </div>
+        {/* Interior LED light strip */}
+        <div className="fridge-light-strip" />
       </nav>
 
-      {/* Main content */}
-      <main className="max-w-4xl mx-auto px-4 py-6 pb-28">
-        <h2 className="text-xl font-bold text-slate-800 mb-5">{TAB_TITLES[activeTab]}</h2>
+      {/* Main content — animated like fridge door opening */}
+      <main className="max-w-4xl mx-auto px-4 pt-5 pb-28">
+        <div key={activeTab} className="fridge-enter">
+          <h2 className="text-xl font-bold text-slate-700 mb-5 tracking-tight">{TAB_TITLES[activeTab]}</h2>
 
-        {activeTab === "dashboard" && (
-          <Dashboard
-            foods={foods}
-            meals={meals}
-            shoppingCount={uncheckedShopping}
-            onTabChange={(tab) => setActiveTab(tab as TabId)}
-            onAddFood={() => setShowAddModal(true)}
-          />
-        )}
-        {activeTab === "fridge" && (
-          <FridgeInventory
-            foods={foods}
-            onUpdate={handleUpdateFood}
-            onDelete={handleDeleteFood}
-            onOpenAdd={() => setShowAddModal(true)}
-          />
-        )}
-        {activeTab === "suggestions" && (
-          <MealSuggestions
-            foods={foods}
-            recipes={recipes}
-            onCook={setFoods}
-            onAddShopping={(items) => setShopping((prev) => [...prev, ...items])}
-            onAddFood={handleAddFood}
-            onSaveRecipes={setRecipes}
-          />
-        )}
-        {activeTab === "planner" && (
-          <MealPlanner
-            foods={foods}
-            meals={meals}
-            onAdd={handleAddMeal}
-            onDelete={handleDeleteMeal}
-          />
-        )}
-        {activeTab === "shopping" && (
-          <ShoppingList
-            items={shopping}
-            foods={foods}
-            meals={meals}
-            recipes={recipes}
-            onAdd={handleAddShopping}
-            onAddMany={handleAddManyShopping}
-            onToggle={handleToggleShopping}
-            onDelete={handleDeleteShopping}
-            onClearChecked={handleClearChecked}
-          />
-        )}
-        {activeTab === "sync" && (
-          <SyncData
-            foods={foods}
-            meals={meals}
-            shopping={shopping}
-            onImport={handleImport}
-          />
-        )}
+          {activeTab === "dashboard" && (
+            <Dashboard
+              foods={foods}
+              meals={meals}
+              shoppingCount={uncheckedShopping}
+              onTabChange={(tab) => setActiveTab(tab as TabId)}
+              onAddFood={() => setShowAddModal(true)}
+            />
+          )}
+          {activeTab === "fridge" && (
+            <FridgeInventory
+              foods={foods}
+              onUpdate={handleUpdateFood}
+              onDelete={handleDeleteFood}
+              onOpenAdd={() => setShowAddModal(true)}
+            />
+          )}
+          {activeTab === "suggestions" && (
+            <MealSuggestions
+              foods={foods}
+              recipes={recipes}
+              onCook={setFoods}
+              onAddShopping={(items) => setShopping((prev) => [...prev, ...items])}
+              onAddFood={handleAddFood}
+              onSaveRecipes={setRecipes}
+            />
+          )}
+          {activeTab === "planner" && (
+            <MealPlanner
+              foods={foods}
+              meals={meals}
+              onAdd={handleAddMeal}
+              onDelete={handleDeleteMeal}
+            />
+          )}
+          {activeTab === "shopping" && (
+            <ShoppingList
+              items={shopping}
+              foods={foods}
+              meals={meals}
+              recipes={recipes}
+              onAdd={handleAddShopping}
+              onAddMany={handleAddManyShopping}
+              onToggle={handleToggleShopping}
+              onDelete={handleDeleteShopping}
+              onClearChecked={handleClearChecked}
+            />
+          )}
+          {activeTab === "sync" && (
+            <SyncData
+              foods={foods}
+              meals={meals}
+              shopping={shopping}
+              onImport={handleImport}
+            />
+          )}
+        </div>
       </main>
 
       {/* FAB — visible on dashboard & fridge */}

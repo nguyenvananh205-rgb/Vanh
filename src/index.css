@@ -13,3 +13,69 @@ body {
   text-align: left;
   border: none;
 }
+
+/* ── Fridge interior — cool LED light from top ──────── */
+.fridge-bg {
+  background:
+    linear-gradient(180deg,
+      #bfdbfe 0px,
+      #dbeafe 18px,
+      #eff6ff 50px,
+      #f1f5f9 120px,
+      #f1f5f9 100%
+    );
+  min-height: 100vh;
+}
+
+/* ── Fridge door swing-open on tab change ───────────── */
+@keyframes fridgeDoorOpen {
+  0%   {
+    opacity: 0;
+    transform: perspective(900px) rotateY(-11deg) translateX(-10px);
+  }
+  55%  { opacity: 1; }
+  100% {
+    opacity: 1;
+    transform: perspective(900px) rotateY(0deg) translateX(0);
+  }
+}
+
+.fridge-enter {
+  transform-origin: 0 50%; /* hinge on the left */
+  animation: fridgeDoorOpen 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fridge-enter {
+    animation: none;
+  }
+}
+
+/* ── Stainless-steel header ─────────────────────────── */
+.fridge-header {
+  background: linear-gradient(180deg, #f1f5f9 0%, #ffffff 100%);
+  box-shadow: 0 1px 0 #e2e8f0, 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ── Tab rail — door compartment feel ───────────────── */
+.fridge-tabs {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 1px 0 #e2e8f0, inset 0 -1px 0 rgba(148, 163, 184, 0.15);
+}
+
+/* ── Cold-light strip below tabs ────────────────────── */
+.fridge-light-strip {
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #bfdbfe 25%,
+    #93c5fd 50%,
+    #bfdbfe 75%,
+    transparent 100%
+  );
+  opacity: 0.7;
+}
