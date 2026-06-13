@@ -11,7 +11,9 @@ import ShoppingList from "./components/ShoppingList";
 import SyncData from "./components/SyncData";
 import InstallBanner from "./components/InstallBanner";
 import SmartAddModal from "./components/SmartAddModal";
+import FoodAddedToast from "./components/FoodAddedToast";
 import { useNotifications } from "./hooks/useNotifications";
+import type { FoodCategory } from "./types";
 
 const TABS = [
   { id: "dashboard", label: "Tổng quan", icon: LayoutDashboard },
@@ -28,11 +30,13 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [showSettings, setShowSettings] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [toast, setToast] = useState<{ name: string; category: FoodCategory } | null>(null);
   const { foods, setFoods, meals, setMeals, shopping, setShopping, recipes, setRecipes } = useFridgeStore();
 
   const handleAddFood = (item: FoodItem) => {
     setFoods((prev) => [...prev, item]);
-    setShowAddModal(false);
+    setToast({ name: item.name, category: item.category });
+    // modal handles its own close animation; showAddModal set via onClose
   };
   const handleUpdateFood = (item: FoodItem) => setFoods((prev) => prev.map((f) => f.id === item.id ? item : f));
   const handleDeleteFood = (id: string) => setFoods((prev) => prev.filter((f) => f.id !== id));
@@ -211,6 +215,14 @@ export default function App() {
         <SmartAddModal
           onSave={handleAddFood}
           onClose={() => setShowAddModal(false)}
+        />
+      )}
+
+      {toast && (
+        <FoodAddedToast
+          name={toast.name}
+          category={toast.category}
+          onDone={() => setToast(null)}
         />
       )}
 

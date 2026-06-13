@@ -251,6 +251,7 @@ export default function SmartAddModal({ onSave, onClose }: Props) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [closing, setClosing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // --- Voice ---
@@ -300,8 +301,9 @@ export default function SmartAddModal({ onSave, onClose }: Props) {
   };
 
   const handleSave = (item: FoodItem) => {
-    onSave(item);
-    onClose();
+    onSave(item);          // data saved immediately
+    setClosing(true);      // trigger dismiss animation
+    setTimeout(onClose, 230);
   };
 
   const goBack = () => {
@@ -314,8 +316,8 @@ export default function SmartAddModal({ onSave, onClose }: Props) {
 
   // ---- Render ----
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-      <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[92vh] overflow-y-auto">
+    <div className={`fixed inset-0 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 transition-colors duration-200 ${closing ? "bg-black/0" : "bg-black/60"}`}>
+      <div className={`bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[92vh] overflow-y-auto ${closing ? "modal-dismiss" : ""}`}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100">
           <h2 className="text-lg font-bold text-slate-800">

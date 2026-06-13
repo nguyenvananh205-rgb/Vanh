@@ -66,6 +66,55 @@ body {
   box-shadow: 0 1px 0 #e2e8f0, inset 0 -1px 0 rgba(148, 163, 184, 0.15);
 }
 
+/* ── Modal dismiss (food added) ─────────────────────── */
+@keyframes modalDismiss {
+  0%   { transform: translateY(0) scale(1);    opacity: 1; }
+  100% { transform: translateY(48px) scale(0.96); opacity: 0; }
+}
+.modal-dismiss {
+  animation: modalDismiss 0.24s ease-in both;
+  pointer-events: none;
+}
+
+/* ── Food-added toast ────────────────────────────────── */
+@keyframes toastIn {
+  0%   { transform: translate(-50%, -120%) scale(0.85); opacity: 0; }
+  60%  { transform: translate(-50%, 6px) scale(1.02);  opacity: 1; }
+  100% { transform: translate(-50%, 0) scale(1);       opacity: 1; }
+}
+@keyframes toastOut {
+  from { transform: translate(-50%, 0) scale(1);    opacity: 1; }
+  to   { transform: translate(-50%, -110%) scale(0.9); opacity: 0; }
+}
+.toast-enter { animation: toastIn  0.38s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.toast-exit  { animation: toastOut 0.22s ease-in both; }
+
+/* ── Food emoji bounce into toast ───────────────────── */
+@keyframes foodFly {
+  0%   { transform: translateY(-20px) scale(0.5) rotate(-15deg); opacity: 0; }
+  55%  { transform: translateY(4px)  scale(1.25) rotate(6deg);  opacity: 1; }
+  75%  { transform: translateY(-2px) scale(0.95) rotate(-2deg); }
+  100% { transform: translateY(0)    scale(1)    rotate(0deg);  opacity: 1; }
+}
+.food-fly {
+  animation: foodFly 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+  display: inline-block;
+}
+
+/* ── Fridge wobble on food received ─────────────────── */
+@keyframes fridgeWobble {
+  0%   { transform: rotate(0deg) scale(1);   }
+  15%  { transform: rotate(-6deg) scale(1.05); }
+  35%  { transform: rotate(5deg) scale(1.05); }
+  55%  { transform: rotate(-3deg) scale(1.02); }
+  75%  { transform: rotate(2deg) scale(1.01); }
+  100% { transform: rotate(0deg) scale(1);   }
+}
+.fridge-wobble {
+  animation: fridgeWobble 0.5s ease-out 0.3s both;
+  display: inline-block;
+}
+
 /* ── Shelf section expand animation ─────────────────── */
 @keyframes shelfExpand {
   from { opacity: 0; transform: translateY(-4px); }
