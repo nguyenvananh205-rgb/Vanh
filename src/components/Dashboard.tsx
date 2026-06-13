@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { RefrigeratorIcon, AlertTriangle, CalendarCheck, ShoppingCart, TrendingDown, Plus } from "lucide-react";
+import { RefrigeratorIcon, AlertTriangle, CalendarCheck, ShoppingCart, TrendingDown } from "lucide-react";
 import type { FoodItem, MealPlan } from "../types";
 import { getExpiryStatus, getDaysUntilExpiry, CATEGORY_LABELS, EXPIRY_STYLES } from "../utils";
 import { startOfWeek, endOfWeek, parseISO } from "date-fns";
@@ -44,16 +44,6 @@ export default function Dashboard({ foods, meals, shoppingCount, onTabChange, on
 
   return (
     <div className="space-y-6">
-      {/* Quick-add CTA */}
-      <button
-        onClick={onAddFood}
-        className="w-full flex items-center justify-center gap-2.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white py-3.5 rounded-2xl font-semibold text-sm transition-all active:scale-95 shadow-md"
-        style={{ boxShadow: "0 4px 16px rgba(16,185,129,0.35)" }}
-      >
-        <Plus size={20} />
-        Thêm thực phẩm vào tủ lạnh
-      </button>
-
       {/* Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard
