@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { Plus, Search, Pencil, Trash2, RefrigeratorIcon, Mic, Loader2, CheckSquare, Square, X } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, RefrigeratorIcon, Mic, Loader2, CheckSquare, Square, X, ChevronDown } from "lucide-react";
 import type { FoodItem, FoodCategory, FoodLocation } from "../types";
 import {
   getExpiryStatus,
@@ -118,6 +118,21 @@ export default function FridgeInventory({ foods, onUpdate, onDelete, onOpenAdd }
   const [editMode, setEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkModal, setShowBulkModal] = useState(false);
+
+  // Per-section collapse & category filter
+  const [collapsedLocs, setCollapsedLocs] = useState<Set<FoodLocation>>(new Set());
+  const [locCatFilter, setLocCatFilter] = useState<Partial<Record<FoodLocation, FoodCategory | "all">>>({});
+
+  const toggleCollapse = (loc: FoodLocation) =>
+    setCollapsedLocs((prev) => {
+      const next = new Set(prev);
+      if (next.has(loc)) next.delete(loc); else next.add(loc);
+      return next;
+    });
+
+  const getLocCat = (loc: FoodLocation): FoodCategory | "all" => locCatFilter[loc] ?? "all";
+  const setLocCat = (loc: FoodLocation, cat: FoodCategory | "all") =>
+    setLocCatFilter((prev) => ({ ...prev, [loc]: cat }));
 
   // Voice search
   const handleVoiceResult = useCallback((text: string) => setSearch(text.trim()), []);
@@ -293,37 +308,103 @@ export default function FridgeInventory({ foods, onUpdate, onDelete, onOpenAdd }
           <p className="text-sm mt-1">{search ? `Không có "${search}" trong tủ` : "Thêm thực phẩm để bắt đầu"}</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {LOCATION_ORDER.map((loc) => {
-            const items = grouped.get(loc) ?? [];
-            if (items.length === 0) return null;
+            const allItems = grouped.get(loc) ?? [];
+            if (allItems.length === 0) return null;
+
+            const isCollapsed = collapsedLocs.has(loc);
+            const catFilter = getLocCat(loc);
+            const catsInSection = [...new Set(allItems.map((f) => f.category))];
+            const visibleItems = catFilter === "all"
+              ? allItems
+              : allItems.filter((f) => f.category === catFilter);
+
             return (
               <div key={loc} className={`rounded-2xl border-2 overflow-hidden ${LOCATION_SECTION_STYLE[loc]}`}>
-                <div className="flex items-center gap-2 px-4 py-2.5">
-                  <span className={`text-sm font-semibold`}>{LOCATION_LABELS[loc]}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${LOCATION_COLORS[loc]}`}>{items.length}</span>
-                  {editMode && items.some((f) => !selectedIds.has(f.id)) && (
+                {/* Section header — tap to collapse/expand */}
+                <button
+                  className="w-full flex items-center gap-2 px-4 py-3 text-left"
+                  onClick={() => toggleCollapse(loc)}
+                >
+                  <span className="text-sm font-semibold text-slate-700">{LOCATION_LABELS[loc]}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${LOCATION_COLORS[loc]}`}>
+                    {allItems.length}
+                  </span>
+                  {catFilter !== "all" && (
+                    <span className="text-xs text-slate-400 italic">· {CATEGORY_LABELS[catFilter as FoodCategory]}</span>
+                  )}
+                  {editMode && !isCollapsed && allItems.some((f) => !selectedIds.has(f.id)) && (
                     <button
-                      onClick={() => setSelectedIds((prev) => new Set([...prev, ...items.map((f) => f.id)]))}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedIds((prev) => new Set([...prev, ...allItems.map((f) => f.id)]));
+                      }}
                       className="ml-auto text-xs text-blue-600 hover:underline"
                     >
                       Chọn nhóm này
                     </button>
                   )}
-                </div>
-                <div className="space-y-1 px-3 pb-3">
-                  {items.map((food) => (
-                    <FoodRow
-                      key={food.id}
-                      food={food}
-                      editMode={editMode}
-                      selected={selectedIds.has(food.id)}
-                      onToggleSelect={() => toggleSelect(food.id)}
-                      onEdit={() => { setEditing(food); setShowEditModal(true); }}
-                      onDelete={() => onDelete(food.id)}
-                    />
-                  ))}
-                </div>
+                  <ChevronDown
+                    size={16}
+                    className={`${editMode ? "" : "ml-auto"} text-slate-400 transition-transform duration-200 shrink-0 ${isCollapsed ? "" : "rotate-180"}`}
+                  />
+                </button>
+
+                {/* Expanded: category chips + items */}
+                {!isCollapsed && (
+                  <div className="shelf-expand">
+                    {/* Per-section category filter chips */}
+                    {catsInSection.length > 1 && (
+                      <div className="flex gap-1.5 px-3 pb-2 flex-wrap">
+                        <button
+                          onClick={() => setLocCat(loc, "all")}
+                          className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-colors ${
+                            catFilter === "all"
+                              ? "bg-slate-700 text-white border-slate-700"
+                              : "border-slate-200 text-slate-500 hover:border-slate-400 bg-white"
+                          }`}
+                        >
+                          Tất cả ({allItems.length})
+                        </button>
+                        {catsInSection.map((cat) => (
+                          <button
+                            key={cat}
+                            onClick={() => setLocCat(loc, cat === catFilter ? "all" : cat)}
+                            className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-colors ${
+                              catFilter === cat
+                                ? `${CATEGORY_COLORS[cat]} border-current`
+                                : "border-slate-200 text-slate-500 hover:border-slate-400 bg-white"
+                            }`}
+                          >
+                            {CATEGORY_LABELS[cat]} ({allItems.filter((f) => f.category === cat).length})
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Food rows */}
+                    <div className="space-y-1 px-3 pb-3">
+                      {visibleItems.length === 0 ? (
+                        <p className="text-xs text-slate-400 text-center py-3 italic">
+                          Không có {CATEGORY_LABELS[catFilter as FoodCategory]} trong ngăn này
+                        </p>
+                      ) : (
+                        visibleItems.map((food) => (
+                          <FoodRow
+                            key={food.id}
+                            food={food}
+                            editMode={editMode}
+                            selected={selectedIds.has(food.id)}
+                            onToggleSelect={() => toggleSelect(food.id)}
+                            onEdit={() => { setEditing(food); setShowEditModal(true); }}
+                            onDelete={() => onDelete(food.id)}
+                          />
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}

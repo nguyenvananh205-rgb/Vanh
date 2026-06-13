@@ -66,6 +66,15 @@ body {
   box-shadow: 0 1px 0 #e2e8f0, inset 0 -1px 0 rgba(148, 163, 184, 0.15);
 }
 
+/* ── Shelf section expand animation ─────────────────── */
+@keyframes shelfExpand {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.shelf-expand {
+  animation: shelfExpand 0.15s ease-out both;
+}
+
 /* ── Cold-light strip below tabs ────────────────────── */
 .fridge-light-strip {
   height: 3px;
