@@ -58,11 +58,13 @@ function MainApp({
   guestFridgeId,
   guestFridgeName,
   onSwitchFridge,
+  onShowRegister,
 }: {
   activeFridge: Fridge | null;
   guestFridgeId: string | null;
   guestFridgeName: string | null;
   onSwitchFridge: () => void;
+  onShowRegister?: () => void;
 }) {
   const [showSplash, setShowSplash] = useState(() => !sessionStorage.getItem("splashShown"));
   const [tourQueued, setTourQueued] = useState(false);
@@ -452,6 +454,20 @@ function MainApp({
         />
       )}
 
+      {/* Guest CTA — fixed bottom bar, always visible for guest users */}
+      {isGuest && onShowRegister && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2 bg-gradient-to-t from-white/95 to-transparent pointer-events-none">
+          <button
+            onClick={onShowRegister}
+            className="pointer-events-auto w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.98] text-white font-semibold py-3.5 rounded-2xl shadow-lg text-[15px] transition-all"
+            style={{ boxShadow: "0 4px 20px rgba(16,185,129,0.40)" }}
+          >
+            <RefrigeratorIcon size={18} />
+            Tạo tủ lạnh của tôi
+          </button>
+        </div>
+      )}
+
       {showSettings && <ApiKeySettings onClose={() => setShowSettings(false)} />}
 
       {showSharePanel && activeFridge && (
@@ -471,6 +487,7 @@ export default function App() {
   const [guestFridgeId, setGuestFridgeId] = useState<string | null>(null);
   const [guestFridgeName, setGuestFridgeName] = useState<string | null>(null);
   const [showFridgeSelector, setShowFridgeSelector] = useState(false);
+  const [showRegisterForGuest, setShowRegisterForGuest] = useState(false);
 
   // When user logs out, clear fridge state
   const handleSignOut = async () => {
@@ -533,6 +550,22 @@ export default function App() {
     );
   }
 
+  // ── Guest wants to create an account ─────────────────────────
+  if (guestFridgeId && showRegisterForGuest) {
+    return (
+      <AuthScreen
+        auth={auth}
+        initialTab="register"
+        onGuestAccess={(fridgeId, fridgeName) => {
+          setGuestFridgeId(fridgeId);
+          setGuestFridgeName(fridgeName);
+          setShowRegisterForGuest(false);
+        }}
+        onClose={() => setShowRegisterForGuest(false)}
+      />
+    );
+  }
+
   // ── Guest with fridge ID OR authenticated with active fridge ──
   return (
     <MainApp
@@ -540,6 +573,7 @@ export default function App() {
       guestFridgeId={guestFridgeId}
       guestFridgeName={guestFridgeName}
       onSwitchFridge={() => setShowFridgeSelector(true)}
+      onShowRegister={() => setShowRegisterForGuest(true)}
     />
   );
 }

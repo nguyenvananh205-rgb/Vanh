@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RefrigeratorIcon, Phone, Lock, Eye, EyeOff, Hash, ArrowRight, UserCheck } from "lucide-react";
+import { RefrigeratorIcon, Phone, Lock, Eye, EyeOff, Hash, ArrowRight, UserCheck, X } from "lucide-react";
 import { getFridgeByCode, isSupabaseConfigured } from "../lib/supabase";
 import type { UseAuthReturn } from "../hooks/useAuth";
 
@@ -8,10 +8,12 @@ type Tab = "login" | "register" | "guest";
 interface AuthScreenProps {
   auth: UseAuthReturn;
   onGuestAccess: (fridgeId: string, fridgeName: string) => void;
+  initialTab?: Tab;
+  onClose?: () => void;
 }
 
-export default function AuthScreen({ auth, onGuestAccess }: AuthScreenProps) {
-  const [tab, setTab] = useState<Tab>("login");
+export default function AuthScreen({ auth, onGuestAccess, initialTab = "login", onClose }: AuthScreenProps) {
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -107,6 +109,18 @@ export default function AuthScreen({ auth, onGuestAccess }: AuthScreenProps) {
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+          {/* Close button — shown when opened as overlay from guest mode */}
+          {onClose && (
+            <div className="flex justify-end px-4 pt-3">
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                title="Quay lại"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          )}
           {/* Tab switcher */}
           <div className="flex border-b border-slate-100">
             {tabs.map((t) => (
