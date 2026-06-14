@@ -157,12 +157,19 @@ body {
   100% { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes splashBarFill {
-  0%   { width: 0%; }
-  20%  { width: 25%; }
-  55%  { width: 62%; }
-  85%  { width: 88%; }
-  100% { width: 100%; }
+@keyframes splashBarPulse {
+  0%, 100% { transform: translateX(-100%); }
+  50%       { transform: translateX(300%); }
+}
+
+@keyframes splashCtaIn {
+  0%   { opacity: 0; transform: translateY(24px) scale(0.92); }
+  100% { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+@keyframes splashCtaBtnGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.0); }
+  50%       { box-shadow: 0 0 28px 6px rgba(255,255,255,0.22); }
 }
 
 @keyframes splashFadeOut {
@@ -209,12 +216,30 @@ body {
   animation: splashTextIn 0.5s ease 0.65s both;
 }
 
+.splash-cta {
+  opacity: 0;
+  pointer-events: none;
+  transition: none;
+}
+
+.splash-cta-visible {
+  animation: splashCtaIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.splash-cta-visible button {
+  animation: splashCtaBtnGlow 2.4s ease-in-out 0.6s infinite;
+}
+
+/* Shimmer bar — loops while waiting for user */
 .splash-bar {
   animation: splashTextIn 0.5s ease 0.85s both;
 }
 
 .splash-bar-fill {
-  animation: splashBarFill 1.9s cubic-bezier(0.4, 0, 0.2, 1) 0.4s both;
+  width: 35%;
+  animation: splashBarPulse 1.8s ease-in-out 0.6s infinite;
 }
 
 .splash-glow {

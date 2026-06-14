@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { RefrigeratorIcon } from "lucide-react";
+import { RefrigeratorIcon, ArrowRight } from "lucide-react";
 
 const FOOD_EMOJIS = ["🥦", "🥕", "🍎", "🥩", "🧀", "🥚", "🌽", "🍅", "🧅", "🫐", "🥑", "🍋", "🫛", "🍇"];
 
@@ -22,16 +22,21 @@ const PARTICLES: Particle[] = Array.from({ length: 14 }, (_, i) => ({
 }));
 
 export default function SplashScreen({ onDone }: { onDone: () => void }) {
+  const [showButton, setShowButton] = useState(false);
   const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setExiting(true), 2000);
-    const t2 = setTimeout(() => onDone(), 2420);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [onDone]);
+    const t = setTimeout(() => setShowButton(true), 1800);
+    return () => clearTimeout(t);
+  }, []);
+
+  const handleEnter = () => {
+    setExiting(true);
+    setTimeout(() => onDone(), 520);
+  };
 
   return (
-    <div className={`splash-screen${exiting ? " splash-exit" : ""}`} aria-hidden="true">
+    <div className={`splash-screen${exiting ? " splash-exit" : ""}`}>
       {/* Floating food particles */}
       {PARTICLES.map((p) => (
         <span
@@ -48,11 +53,11 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
         </span>
       ))}
 
-      {/* Glass circle glow behind logo */}
+      {/* Glass glow orb */}
       <div className="splash-glow" />
 
       {/* Center content */}
-      <div className="relative z-10 flex flex-col items-center gap-5 text-white text-center px-8">
+      <div className="relative z-10 flex flex-col items-center gap-6 text-white text-center px-8">
         <div className="splash-logo w-28 h-28 bg-white/15 backdrop-blur-md rounded-[28px] flex items-center justify-center ring-1 ring-white/25 shadow-2xl">
           <RefrigeratorIcon size={58} className="text-white" strokeWidth={1.4} />
         </div>
@@ -62,9 +67,16 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
           <p className="text-emerald-100/85 text-sm font-medium tracking-wide">Quản lý thực phẩm thông minh</p>
         </div>
 
-        {/* Progress bar */}
-        <div className="splash-bar w-32 h-[3px] bg-white/20 rounded-full overflow-hidden">
-          <div className="splash-bar-fill h-full rounded-full bg-white/80" />
+        {/* CTA button — fades in after 1.8s */}
+        <div className={`splash-cta${showButton ? " splash-cta-visible" : ""}`}>
+          <button
+            onClick={handleEnter}
+            className="group flex items-center gap-2.5 bg-white text-emerald-700 font-semibold px-7 py-3.5 rounded-2xl shadow-xl hover:bg-emerald-50 active:scale-95 transition-all text-[15px] tracking-wide"
+          >
+            Open &amp; Explore
+            <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+          </button>
+          <p className="text-white/50 text-xs mt-3 tracking-wide">Discover what's inside</p>
         </div>
       </div>
     </div>
