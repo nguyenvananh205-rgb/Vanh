@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { RefrigeratorIcon, Plus, Hash, Crown, Users, Copy, Check, LogOut, ArrowRight, X } from "lucide-react";
+import { RefrigeratorIcon, Plus, Hash, Crown, Users, Copy, Check, LogOut, ArrowRight, X, Link } from "lucide-react";
 import type { Fridge, UserProfile } from "../types";
-import { getMyFridges, createFridge, joinFridgeByCode } from "../lib/supabase";
+import { getMyFridges, createFridge, joinFridgeByCode, getFridgeByCode } from "../lib/supabase";
 
 interface FridgeSelectorProps {
   user: UserProfile;
@@ -26,6 +26,13 @@ export default function FridgeSelector({ user, onSelect, onSignOut }: FridgeSele
 
   // Copied code feedback
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Copied invite link feedback
+  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
+
+  // Pending invite from ?join=CODE URL
+  const [pendingInvite, setPendingInvite] = useState<{code: string; fridgeName?: string; loading: boolean; error?: string} | null>(null);
+  const [acceptingInvite, setAcceptingInvite] = useState(false);
 
   const loadFridges = useCallback(async () => {
     setLoading(true);
@@ -57,6 +64,57 @@ export default function FridgeSelector({ user, onSelect, onSignOut }: FridgeSele
   useEffect(() => {
     loadFridges();
   }, [loadFridges]);
+
+  // Detect pending invite stored by App.tsx on mount
+  useEffect(() => {
+    const code = sessionStorage.getItem("pendingJoinCode");
+    if (code) {
+      sessionStorage.removeItem("pendingJoinCode");
+      setPendingInvite({ code, loading: true });
+      getFridgeByCode(code)
+        .then((f) => setPendingInvite({ code, fridgeName: f.name as string, loading: false }))
+        .catch(() => setPendingInvite({ code, loading: false, error: "Link mời không hợp lệ hoặc đã hết hạn" }));
+    }
+  }, []);
+
+  const handleAcceptInvite = async () => {
+    if (!pendingInvite) return;
+    setAcceptingInvite(true);
+    try {
+      const fridge = await joinFridgeByCode(user.id, pendingInvite.code);
+      setPendingInvite(null);
+      onSelect({
+        id: fridge.id as string,
+        name: fridge.name as string,
+        owner_id: fridge.owner_id as string,
+        share_code: fridge.share_code as string,
+        role: "member",
+      });
+    } catch (err) {
+      const msg = (err as Error).message;
+      if (msg.includes("own")) {
+        // User is the owner — navigate to the fridge directly
+        const f = await getFridgeByCode(pendingInvite.code);
+        setPendingInvite(null);
+        onSelect({ id: f.id as string, name: f.name as string, owner_id: f.owner_id as string, share_code: f.share_code as string, role: "owner" });
+      } else {
+        setPendingInvite((prev) => prev ? { ...prev, error: msg } : null);
+        setAcceptingInvite(false);
+      }
+    }
+  };
+
+  const getInviteLink = (shareCode: string) => {
+    const base = `${window.location.origin}${window.location.pathname}`;
+    return `${base}?join=${shareCode}`;
+  };
+
+  const copyInviteLink = (shareCode: string, id: string) => {
+    navigator.clipboard.writeText(getInviteLink(shareCode)).then(() => {
+      setCopiedLinkId(id);
+      setTimeout(() => setCopiedLinkId(null), 2000);
+    });
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,13 +251,22 @@ export default function FridgeSelector({ user, onSelect, onSignOut }: FridgeSele
 
                   <div className="flex items-center gap-1 flex-shrink-0">
                     {fridge.role === "owner" && (
-                      <button
-                        onClick={() => copyCode(fridge.share_code, fridge.id)}
-                        className="p-2 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
-                        title="Sao chép mã chia sẻ"
-                      >
-                        {copiedId === fridge.id ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} />}
-                      </button>
+                      <>
+                        <button
+                          onClick={() => copyCode(fridge.share_code, fridge.id)}
+                          className="p-2 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                          title="Sao chép mã chia sẻ"
+                        >
+                          {copiedId === fridge.id ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} />}
+                        </button>
+                        <button
+                          onClick={() => copyInviteLink(fridge.share_code, fridge.id)}
+                          className="p-2 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                          title="Sao chép link mời"
+                        >
+                          {copiedLinkId === fridge.id ? <Check size={15} className="text-emerald-500" /> : <Link size={15} />}
+                        </button>
+                      </>
                     )}
                     <button
                       onClick={() => onSelect(fridge)}
@@ -311,6 +378,62 @@ export default function FridgeSelector({ user, onSelect, onSignOut }: FridgeSele
                 )}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Invite confirmation modal ── */}
+      {pendingInvite && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+          <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6">
+            {pendingInvite.loading ? (
+              <div className="py-6 flex flex-col items-center gap-3">
+                <span className="w-6 h-6 border-2 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+                <p className="text-sm text-slate-400">Đang tải thông tin tủ lạnh...</p>
+              </div>
+            ) : pendingInvite.error ? (
+              <div className="text-center py-4">
+                <p className="text-red-600 text-sm font-medium mb-4">{pendingInvite.error}</p>
+                <button onClick={() => setPendingInvite(null)} className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl transition-colors">
+                  Đóng
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <RefrigeratorIcon size={32} className="text-emerald-600" />
+                  </div>
+                  <h3 className="text-base font-bold text-slate-800 mb-1">Lời mời tham gia</h3>
+                  <p className="text-slate-500 text-sm">
+                    Bạn được mời vào tủ lạnh
+                  </p>
+                  <p className="text-lg font-semibold text-emerald-700 mt-1">"{pendingInvite.fridgeName}"</p>
+                </div>
+                <p className="text-xs text-slate-400 text-center mb-5">
+                  Tủ lạnh này sẽ được đồng bộ về tài khoản của bạn. Bạn có thể xem và quản lý thực phẩm cùng chủ sở hữu.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setPendingInvite(null)}
+                    className="flex-1 py-3 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
+                  >
+                    Từ chối
+                  </button>
+                  <button
+                    onClick={handleAcceptInvite}
+                    disabled={acceptingInvite}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 transition-all"
+                  >
+                    {acceptingInvite ? (
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>Đồng bộ <ArrowRight size={15} /></>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

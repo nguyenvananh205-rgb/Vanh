@@ -489,6 +489,15 @@ export default function App() {
   const [showFridgeSelector, setShowFridgeSelector] = useState(false);
   const [showRegisterForGuest, setShowRegisterForGuest] = useState(false);
 
+  // Capture ?join=CODE from URL on first load and stash it for FridgeSelector
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("join");
+    if (code) {
+      sessionStorage.setItem("pendingJoinCode", code.toUpperCase());
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
   // When user logs out, clear fridge state
   const handleSignOut = async () => {
     await auth.signOut();
