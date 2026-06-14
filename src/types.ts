@@ -43,6 +43,21 @@ export interface ShoppingItem {
 
 export type ExpiryStatus = "expired" | "critical" | "soon" | "ok";
 
+// ── Auth & Fridge sharing ───────────────────────────────────────
+export interface UserProfile {
+  id: string;
+  phone: string;
+  display_name?: string;
+}
+
+export interface Fridge {
+  id: string;
+  name: string;
+  owner_id: string;
+  share_code: string;
+  role: "owner" | "member" | "guest"; // guest = unregistered user with share code
+}
+
 // ── Recipe system ──────────────────────────────────────────────
 export type RecipePurpose = "com_gia_dinh" | "healthy" | "dac_biet";
 export type DishRole = "canh" | "rau" | "chinh" | "phu";

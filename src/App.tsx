@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
-import { RefrigeratorIcon, CalendarDays, ShoppingCart, Lightbulb, LayoutDashboard, RefreshCw, Settings, Plus } from "lucide-react";
-import { useFridgeStore } from "./store";
-import type { FoodItem, MealPlan, ShoppingItem } from "./types";
+import {
+  RefrigeratorIcon, CalendarDays, ShoppingCart, Lightbulb,
+  LayoutDashboard, RefreshCw, Settings, Plus, Share2, LogOut, UserCheck
+} from "lucide-react";
+import { DEFAULT_RECIPES } from "./data/defaultRecipes";
+import type { FoodItem, MealPlan, ShoppingItem, Recipe, Fridge } from "./types";
 import Dashboard from "./components/Dashboard";
 import FridgeInventory from "./components/FridgeInventory";
 import ApiKeySettings from "./components/ApiKeySettings";
@@ -13,8 +16,14 @@ import InstallBanner from "./components/InstallBanner";
 import SmartAddModal from "./components/SmartAddModal";
 import FoodAddedToast from "./components/FoodAddedToast";
 import SplashScreen from "./components/SplashScreen";
+import AuthScreen from "./components/AuthScreen";
+import FridgeSelector from "./components/FridgeSelector";
+import ShareCodePanel from "./components/ShareCodePanel";
 import { useNotifications } from "./hooks/useNotifications";
 import { startOnboardingTour } from "./hooks/useOnboarding";
+import { useAuth } from "./hooks/useAuth";
+import { useFridgeData, useLocalFridgeStore } from "./hooks/useFridgeData";
+import { isSupabaseConfigured } from "./lib/supabase";
 import type { FoodCategory } from "./types";
 
 const TABS = [
@@ -28,40 +37,194 @@ const TABS = [
 
 type TabId = typeof TABS[number]["id"];
 
-export default function App() {
+// ── Loading screen ──────────────────────────────────────────────────────────
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+          <RefrigeratorIcon size={24} className="text-white" />
+        </div>
+        <div className="w-6 h-6 border-2 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+        <p className="text-sm text-slate-400">Đang tải...</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Main app wrapper ──────────────────────────────────────────────────────────
+function MainApp({
+  activeFridge,
+  guestFridgeId,
+  guestFridgeName,
+  onSwitchFridge,
+}: {
+  activeFridge: Fridge | null;
+  guestFridgeId: string | null;
+  guestFridgeName: string | null;
+  onSwitchFridge: () => void;
+}) {
   const [showSplash, setShowSplash] = useState(() => !sessionStorage.getItem("splashShown"));
   const [tourQueued, setTourQueued] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [showSettings, setShowSettings] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showSharePanel, setShowSharePanel] = useState(false);
   const [toast, setToast] = useState<{ name: string; category: FoodCategory } | null>(null);
-  const { foods, setFoods, meals, setMeals, shopping, setShopping, recipes, setRecipes } = useFridgeStore();
+  const [recipes, setRecipes] = useState<Recipe[]>(() => {
+    try {
+      const raw = localStorage.getItem("fridge_recipes");
+      return raw ? JSON.parse(raw) : DEFAULT_RECIPES;
+    } catch { return DEFAULT_RECIPES; }
+  });
 
-  const handleAddFood = (item: FoodItem) => {
-    setFoods((prev) => [...prev, item]);
+  // Determine which fridge to use
+  const fridgeId = activeFridge?.id ?? guestFridgeId;
+  const isGuest = !activeFridge && !!guestFridgeId;
+  const isOwner = activeFridge?.role === "owner";
+
+  // Supabase-backed fridge data
+  const fridgeData = useFridgeData(
+    isSupabaseConfigured ? fridgeId ?? null : null,
+    isGuest ? "Vãng lai" : undefined
+  );
+
+  // Local store (fallback when Supabase not configured)
+  const localStore = useLocalFridgeStore();
+
+  // Choose data source
+  const foods = isSupabaseConfigured ? fridgeData.foods : localStore.foods;
+  const meals = isSupabaseConfigured ? fridgeData.meals : localStore.meals;
+  const shopping = isSupabaseConfigured ? fridgeData.shopping : localStore.shopping;
+
+  const { requestPermission } = useNotifications(foods);
+
+  // ── Food handlers ──────────────────────────────────────────────
+  const handleAddFood = async (item: FoodItem) => {
+    if (isSupabaseConfigured) {
+      const { id: _id, ...rest } = item;
+      await fridgeData.addFood(rest);
+    } else {
+      localStore.setFoods((prev) => [...prev, item]);
+    }
     setToast({ name: item.name, category: item.category });
-    // modal handles its own close animation; showAddModal set via onClose
   };
-  const handleUpdateFood = (item: FoodItem) => setFoods((prev) => prev.map((f) => f.id === item.id ? item : f));
-  const handleDeleteFood = (id: string) => setFoods((prev) => prev.filter((f) => f.id !== id));
 
-  const handleAddMeal = (meal: MealPlan) => setMeals((prev) => [...prev, meal]);
-  const handleDeleteMeal = (id: string) => setMeals((prev) => prev.filter((m) => m.id !== id));
+  const handleUpdateFood = async (item: FoodItem) => {
+    if (isSupabaseConfigured) {
+      await fridgeData.updateFood(item);
+    } else {
+      localStore.setFoods((prev) => prev.map((f) => f.id === item.id ? item : f));
+    }
+  };
 
-  const handleAddShopping = (item: ShoppingItem) => setShopping((prev) => [...prev, item]);
-  const handleAddManyShopping = (items: ShoppingItem[]) => setShopping((prev) => [...prev, ...items]);
-  const handleToggleShopping = (id: string) => setShopping((prev) => prev.map((i) => i.id === id ? { ...i, checked: !i.checked } : i));
-  const handleDeleteShopping = (id: string) => setShopping((prev) => prev.filter((i) => i.id !== id));
-  const handleClearChecked = () => setShopping((prev) => prev.filter((i) => !i.checked));
+  const handleDeleteFood = async (id: string) => {
+    if (isSupabaseConfigured) {
+      await fridgeData.deleteFood(id);
+    } else {
+      localStore.setFoods((prev) => prev.filter((f) => f.id !== id));
+    }
+  };
 
+  // ── Meal handlers ──────────────────────────────────────────────
+  const handleAddMeal = async (meal: MealPlan) => {
+    if (isSupabaseConfigured) {
+      const { id: _id, ingredientIds: _iids, ...rest } = meal;
+      await fridgeData.addMeal(rest);
+    } else {
+      localStore.setMeals((prev) => [...prev, meal]);
+    }
+  };
+
+  const handleDeleteMeal = async (id: string) => {
+    if (isSupabaseConfigured) {
+      await fridgeData.deleteMeal(id);
+    } else {
+      localStore.setMeals((prev) => prev.filter((m) => m.id !== id));
+    }
+  };
+
+  // ── Shopping handlers ──────────────────────────────────────────
+  const handleAddShopping = async (item: ShoppingItem) => {
+    if (isSupabaseConfigured) {
+      const { id: _id, ...rest } = item;
+      await fridgeData.addShopping(rest);
+    } else {
+      localStore.setShopping((prev) => [...prev, item]);
+    }
+  };
+
+  const handleAddManyShopping = async (items: ShoppingItem[]) => {
+    if (isSupabaseConfigured) {
+      await fridgeData.addManyShopping(items.map(({ id: _id, ...rest }) => rest));
+    } else {
+      localStore.setShopping((prev) => [...prev, ...items]);
+    }
+  };
+
+  // ShoppingList calls onToggle(id) — we look up the current checked state and invert it
+  const handleToggleShopping = async (id: string) => {
+    const current = shopping.find((s) => s.id === id);
+    if (!current) return;
+    if (isSupabaseConfigured) {
+      await fridgeData.toggleShopping(id, !current.checked);
+    } else {
+      localStore.setShopping((prev) => prev.map((i) => i.id === id ? { ...i, checked: !i.checked } : i));
+    }
+  };
+
+  const handleDeleteShopping = async (id: string) => {
+    if (isSupabaseConfigured) {
+      await fridgeData.deleteShopping(id);
+    } else {
+      localStore.setShopping((prev) => prev.filter((i) => i.id !== id));
+    }
+  };
+
+  const handleClearChecked = async () => {
+    if (isSupabaseConfigured) {
+      await fridgeData.clearCheckedShopping();
+    } else {
+      localStore.setShopping((prev) => prev.filter((i) => !i.checked));
+    }
+  };
+
+  // ── Cook / recipe handlers ─────────────────────────────────────
+  const handleCookFoods = (updatedFoods: FoodItem[]) => {
+    if (isSupabaseConfigured) {
+      fridgeData.setFoods(updatedFoods);
+    } else {
+      localStore.setFoods(updatedFoods);
+    }
+  };
+
+  const handleAddShoppingFromRecipe = (items: ShoppingItem[]) => {
+    handleAddManyShopping(items);
+  };
+
+  const handleAddFoodFromRecipe = (item: FoodItem) => {
+    handleAddFood(item);
+  };
+
+  const handleSaveRecipes = (newRecipes: Recipe[]) => {
+    setRecipes(newRecipes);
+    localStorage.setItem("fridge_recipes", JSON.stringify(newRecipes));
+  };
+
+  // ── Import ──────────────────────────────────────────────────────
   const handleImport = (data: { foods: FoodItem[]; meals: MealPlan[]; shopping: ShoppingItem[] }) => {
-    setFoods(data.foods);
-    setMeals(data.meals);
-    setShopping(data.shopping);
+    if (isSupabaseConfigured) {
+      fridgeData.setFoods(data.foods);
+      fridgeData.setMeals(data.meals);
+      fridgeData.setShopping(data.shopping);
+    } else {
+      localStore.setFoods(data.foods);
+      localStore.setMeals(data.meals);
+      localStore.setShopping(data.shopping);
+    }
   };
 
   const uncheckedShopping = shopping.filter((i) => !i.checked).length;
-  const { requestPermission } = useNotifications(foods);
 
   const TAB_TITLES: Record<TabId, string> = {
     dashboard: "Tổng quan",
@@ -85,7 +248,6 @@ export default function App() {
     setTourQueued(true);
   };
 
-  // Fire tour after app renders (DOM must exist before driver.js highlights elements)
   useEffect(() => {
     if (!tourQueued) return;
     const t = setTimeout(() => {
@@ -95,22 +257,35 @@ export default function App() {
     return () => clearTimeout(t);
   }, [tourQueued]);
 
+  const fridgeName = activeFridge?.name ?? guestFridgeName ?? "Tủ lạnh";
+
   return (
     <div className="fridge-bg">
       {showSplash && <SplashScreen onDone={handleSplashDone} onExplore={handleSplashExplore} />}
-      {/* Header — stainless steel exterior */}
+
+      {/* Header */}
       <header data-tour="header" className="fridge-header sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
               <RefrigeratorIcon size={19} className="text-white" />
             </div>
-            <div>
-              <h1 className="text-base font-bold text-slate-800 leading-tight tracking-tight">Tủ lạnh gia đình</h1>
-              <p className="text-[11px] text-slate-400 leading-tight">Quản lý thực phẩm thông minh</p>
+            <div className="min-w-0">
+              <h1 className="text-base font-bold text-slate-800 leading-tight tracking-tight truncate max-w-[160px] sm:max-w-xs">
+                {fridgeName}
+              </h1>
+              {isGuest ? (
+                <span className="text-[11px] text-amber-600 font-medium leading-tight flex items-center gap-1">
+                  <UserCheck size={10} />
+                  Vãng lai
+                </span>
+              ) : (
+                <p className="text-[11px] text-slate-400 leading-tight">Quản lý thực phẩm thông minh</p>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             <button
               data-tour="btn-add-header"
               onClick={() => setShowAddModal(true)}
@@ -119,6 +294,29 @@ export default function App() {
               <Plus size={16} />
               Thêm
             </button>
+
+            {/* Share code button — only for fridge owners */}
+            {isOwner && activeFridge && (
+              <button
+                onClick={() => setShowSharePanel(true)}
+                className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+                title="Mã chia sẻ"
+              >
+                <Share2 size={18} className="text-slate-400" />
+              </button>
+            )}
+
+            {/* Switch fridge / logout for logged-in users */}
+            {!isGuest && (
+              <button
+                onClick={onSwitchFridge}
+                className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+                title="Chuyển tủ lạnh / Đăng xuất"
+              >
+                <LogOut size={18} className="text-slate-400" />
+              </button>
+            )}
+
             <button
               data-tour="btn-settings"
               onClick={() => setShowSettings(true)}
@@ -133,7 +331,7 @@ export default function App() {
 
       <InstallBanner onRequestNotifications={requestPermission} />
 
-      {/* Tab nav — door compartment rail */}
+      {/* Tab nav */}
       <nav className="fridge-tabs sticky top-[57px] z-30">
         <div className="max-w-4xl mx-auto px-4 overflow-x-auto scrollbar-hide">
           <div className="flex gap-0 min-w-max">
@@ -159,11 +357,10 @@ export default function App() {
             ))}
           </div>
         </div>
-        {/* Interior LED light strip */}
         <div className="fridge-light-strip" />
       </nav>
 
-      {/* Main content — animated like fridge door opening */}
+      {/* Main content */}
       <main data-tour="main-content" className="max-w-4xl mx-auto px-4 pt-5 pb-28">
         <div key={activeTab} className="fridge-enter">
           <h2 className="text-xl font-bold text-slate-700 mb-5 tracking-tight">{TAB_TITLES[activeTab]}</h2>
@@ -189,10 +386,10 @@ export default function App() {
             <MealSuggestions
               foods={foods}
               recipes={recipes}
-              onCook={setFoods}
-              onAddShopping={(items) => setShopping((prev) => [...prev, ...items])}
-              onAddFood={handleAddFood}
-              onSaveRecipes={setRecipes}
+              onCook={handleCookFoods}
+              onAddShopping={handleAddShoppingFromRecipe}
+              onAddFood={handleAddFoodFromRecipe}
+              onSaveRecipes={handleSaveRecipes}
             />
           )}
           {activeTab === "planner" && (
@@ -227,7 +424,7 @@ export default function App() {
         </div>
       </main>
 
-      {/* FAB — visible on dashboard & fridge */}
+      {/* FAB */}
       {showFab && (
         <button
           data-tour="fab"
@@ -240,7 +437,6 @@ export default function App() {
         </button>
       )}
 
-      {/* Global SmartAddModal */}
       {showAddModal && (
         <SmartAddModal
           onSave={handleAddFood}
@@ -257,6 +453,93 @@ export default function App() {
       )}
 
       {showSettings && <ApiKeySettings onClose={() => setShowSettings(false)} />}
+
+      {showSharePanel && activeFridge && (
+        <ShareCodePanel
+          fridge={activeFridge}
+          onClose={() => setShowSharePanel(false)}
+        />
+      )}
     </div>
+  );
+}
+
+// ── Root App component ──────────────────────────────────────────────────────
+export default function App() {
+  const auth = useAuth();
+  const [activeFridge, setActiveFridge] = useState<Fridge | null>(null);
+  const [guestFridgeId, setGuestFridgeId] = useState<string | null>(null);
+  const [guestFridgeName, setGuestFridgeName] = useState<string | null>(null);
+  const [showFridgeSelector, setShowFridgeSelector] = useState(false);
+
+  // When user logs out, clear fridge state
+  const handleSignOut = async () => {
+    await auth.signOut();
+    setActiveFridge(null);
+    setGuestFridgeId(null);
+    setGuestFridgeName(null);
+    setShowFridgeSelector(false);
+  };
+
+  // When session changes (login/logout), reset fridge selection
+  useEffect(() => {
+    if (!auth.session) {
+      setActiveFridge(null);
+      setShowFridgeSelector(false);
+    }
+  }, [auth.session]);
+
+  // ── Loading state ──────────────────────────────────────────────
+  if (auth.loading) {
+    return <LoadingScreen />;
+  }
+
+  // ── Supabase not configured — run in local-only mode ──────────
+  if (!isSupabaseConfigured) {
+    return (
+      <MainApp
+        activeFridge={null}
+        guestFridgeId="local"
+        guestFridgeName="Tủ lạnh gia đình"
+        onSwitchFridge={() => {}}
+      />
+    );
+  }
+
+  // ── Not authenticated and not a guest ─────────────────────────
+  if (!auth.session && !guestFridgeId) {
+    return (
+      <AuthScreen
+        auth={auth}
+        onGuestAccess={(fridgeId, fridgeName) => {
+          setGuestFridgeId(fridgeId);
+          setGuestFridgeName(fridgeName);
+        }}
+      />
+    );
+  }
+
+  // ── Authenticated but needs to select/switch fridge ───────────
+  if (auth.session && auth.user && (!activeFridge || showFridgeSelector)) {
+    return (
+      <FridgeSelector
+        user={auth.user}
+        onSelect={(fridge) => {
+          setActiveFridge(fridge);
+          setShowFridgeSelector(false);
+        }}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
+  // ── Guest with fridge ID OR authenticated with active fridge ──
+  return (
+    <MainApp
+      activeFridge={activeFridge}
+      guestFridgeId={guestFridgeId}
+      guestFridgeName={guestFridgeName}
+      onSwitchFridge={() => setShowFridgeSelector(true)}
+    />
   );
 }
