@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RefrigeratorIcon, CalendarDays, ShoppingCart, Lightbulb, LayoutDashboard, RefreshCw, Settings, Plus } from "lucide-react";
 import { useFridgeStore } from "./store";
 import type { FoodItem, MealPlan, ShoppingItem } from "./types";
@@ -14,6 +14,7 @@ import SmartAddModal from "./components/SmartAddModal";
 import FoodAddedToast from "./components/FoodAddedToast";
 import SplashScreen from "./components/SplashScreen";
 import { useNotifications } from "./hooks/useNotifications";
+import { startOnboardingTour } from "./hooks/useOnboarding";
 import type { FoodCategory } from "./types";
 
 const TABS = [
@@ -29,6 +30,7 @@ type TabId = typeof TABS[number]["id"];
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(() => !sessionStorage.getItem("splashShown"));
+  const [tourQueued, setTourQueued] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [showSettings, setShowSettings] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -77,11 +79,27 @@ export default function App() {
     setShowSplash(false);
   };
 
+  const handleSplashExplore = () => {
+    sessionStorage.setItem("splashShown", "1");
+    setShowSplash(false);
+    setTourQueued(true);
+  };
+
+  // Fire tour after app renders (DOM must exist before driver.js highlights elements)
+  useEffect(() => {
+    if (!tourQueued) return;
+    const t = setTimeout(() => {
+      startOnboardingTour((tab) => setActiveTab(tab as TabId));
+      setTourQueued(false);
+    }, 420);
+    return () => clearTimeout(t);
+  }, [tourQueued]);
+
   return (
     <div className="fridge-bg">
-      {showSplash && <SplashScreen onDone={handleSplashDone} />}
+      {showSplash && <SplashScreen onDone={handleSplashDone} onExplore={handleSplashExplore} />}
       {/* Header — stainless steel exterior */}
-      <header className="fridge-header sticky top-0 z-40">
+      <header data-tour="header" className="fridge-header sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
@@ -94,6 +112,7 @@ export default function App() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              data-tour="btn-add-header"
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-sm font-medium transition-all active:scale-95 shadow-sm"
             >
@@ -101,6 +120,7 @@ export default function App() {
               Thêm
             </button>
             <button
+              data-tour="btn-settings"
               onClick={() => setShowSettings(true)}
               className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
               title="Cài đặt AI"
@@ -120,6 +140,7 @@ export default function App() {
             {TABS.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
+                data-tour={`tab-${id}`}
                 onClick={() => setActiveTab(id)}
                 className={`relative flex items-center gap-1.5 px-4 py-3 text-sm font-medium transition-all whitespace-nowrap ${
                   activeTab === id
@@ -143,7 +164,7 @@ export default function App() {
       </nav>
 
       {/* Main content — animated like fridge door opening */}
-      <main className="max-w-4xl mx-auto px-4 pt-5 pb-28">
+      <main data-tour="main-content" className="max-w-4xl mx-auto px-4 pt-5 pb-28">
         <div key={activeTab} className="fridge-enter">
           <h2 className="text-xl font-bold text-slate-700 mb-5 tracking-tight">{TAB_TITLES[activeTab]}</h2>
 
@@ -209,6 +230,7 @@ export default function App() {
       {/* FAB — visible on dashboard & fridge */}
       {showFab && (
         <button
+          data-tour="fab"
           onClick={() => setShowAddModal(true)}
           className="fixed bottom-6 right-4 z-40 flex items-center gap-2.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white pl-4 pr-5 py-3.5 rounded-2xl shadow-xl font-semibold text-sm transition-all active:scale-95"
           style={{ boxShadow: "0 4px 20px rgba(16,185,129,0.45)" }}
