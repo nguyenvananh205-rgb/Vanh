@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, claude/fridge-inventory-management-nl78t]
+    branches: [main, claude/fridge-inventory-management-nl78t, claude/homepage-animation-c2fwsj]
   workflow_dispatch:
 
 permissions:
