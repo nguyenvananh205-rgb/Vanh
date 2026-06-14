@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, Compass } from "lucide-react";
-import PeachChefLogo from "./PeachChefLogo";
 
 const FOOD_EMOJIS = ["🥦", "🥕", "🍎", "🥩", "🧀", "🥚", "🌽", "🍅", "🧅", "🫐", "🥑", "🍋", "🫛", "🍇", "🍊", "🫒", "🥬", "🍓"];
 
@@ -64,9 +63,21 @@ export default function SplashScreen({ onDone, onExplore }: Props) {
 
       {/* Center content */}
       <div className="relative z-10 flex flex-col items-center gap-5 text-white text-center px-8">
-        {/* Princess Peach chef logo */}
+        {/* Princess Peach chef — real image with animations */}
         <div className="peach-idle">
-          <PeachChefLogo className="peach-entrance w-36 h-auto drop-shadow-2xl" />
+          <div className="peach-entrance relative">
+            <img
+              src={`${import.meta.env.BASE_URL}peach-chef.webp`}
+              alt="Princess Peach Chef"
+              className="w-44 h-44 object-cover rounded-full shadow-2xl ring-4 ring-white/30"
+              draggable={false}
+            />
+            {/* Blink overlay — two eyelid-coloured strips that meet to simulate blinking */}
+            <div className="peach-blink-top" />
+            <div className="peach-blink-bottom" />
+            {/* Subtle rim glow */}
+            <div className="absolute inset-0 rounded-full ring-2 ring-white/20 pointer-events-none" />
+          </div>
         </div>
 
         {/* App title */}

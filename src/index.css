@@ -294,6 +294,47 @@ body {
   animation: peachBlink 3.8s ease-in-out 1.5s infinite;
 }
 
+/* Blink overlay for real image (two eyelids sliding to meet at center) */
+@keyframes peachBlinkTop {
+  0%, 83%, 100% { transform: scaleY(0); }
+  88%, 92%      { transform: scaleY(1); }
+}
+@keyframes peachBlinkBottom {
+  0%, 83%, 100% { transform: scaleY(0); }
+  88%, 92%      { transform: scaleY(1); }
+}
+
+.peach-blink-top {
+  position: absolute;
+  /* Eye strip: ~36-48% from top, centered horizontally */
+  top: 36%;
+  left: 18%;
+  width: 64%;
+  height: 13%;
+  background: linear-gradient(180deg, #e8d0c0 0%, #d4b8a8 100%);
+  border-radius: 0 0 50% 50%;
+  transform: scaleY(0);
+  transform-origin: top center;
+  animation: peachBlinkTop 3.8s ease-in-out 1.5s infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.peach-blink-bottom {
+  position: absolute;
+  top: 47%;
+  left: 18%;
+  width: 64%;
+  height: 10%;
+  background: linear-gradient(0deg, #e8d0c0 0%, #d4b8a8 100%);
+  border-radius: 50% 50% 0 0;
+  transform: scaleY(0);
+  transform-origin: bottom center;
+  animation: peachBlinkBottom 3.8s ease-in-out 1.5s infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
 /* ── Tour end sparkle ────────────────────────────────── */
 @keyframes tourSparkleIn {
   0%   { transform: scale(0) rotate(-50deg) translateY(30px); opacity: 0; }
