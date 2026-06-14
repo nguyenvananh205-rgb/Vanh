@@ -12,6 +12,7 @@ import SyncData from "./components/SyncData";
 import InstallBanner from "./components/InstallBanner";
 import SmartAddModal from "./components/SmartAddModal";
 import FoodAddedToast from "./components/FoodAddedToast";
+import SplashScreen from "./components/SplashScreen";
 import { useNotifications } from "./hooks/useNotifications";
 import type { FoodCategory } from "./types";
 
@@ -27,6 +28,7 @@ const TABS = [
 type TabId = typeof TABS[number]["id"];
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(() => !sessionStorage.getItem("splashShown"));
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [showSettings, setShowSettings] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -70,8 +72,14 @@ export default function App() {
 
   const showFab = activeTab === "dashboard" || activeTab === "fridge";
 
+  const handleSplashDone = () => {
+    sessionStorage.setItem("splashShown", "1");
+    setShowSplash(false);
+  };
+
   return (
     <div className="fridge-bg">
+      {showSplash && <SplashScreen onDone={handleSplashDone} />}
       {/* Header — stainless steel exterior */}
       <header className="fridge-header sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">

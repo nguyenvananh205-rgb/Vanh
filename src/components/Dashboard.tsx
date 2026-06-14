@@ -47,6 +47,7 @@ export default function Dashboard({ foods, meals, shoppingCount, onTabChange, on
       {/* Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard
+          index={0}
           icon={<RefrigeratorIcon size={20} className="text-emerald-600" />}
           bg="bg-emerald-50"
           value={stats.total}
@@ -55,6 +56,7 @@ export default function Dashboard({ foods, meals, shoppingCount, onTabChange, on
           onClick={() => onTabChange("fridge")}
         />
         <StatCard
+          index={1}
           icon={<AlertTriangle size={20} className="text-orange-500" />}
           bg="bg-orange-50"
           value={stats.expired + stats.critical + stats.soon}
@@ -64,6 +66,7 @@ export default function Dashboard({ foods, meals, shoppingCount, onTabChange, on
           alert={stats.expired > 0 || stats.critical > 0}
         />
         <StatCard
+          index={2}
           icon={<CalendarCheck size={20} className="text-blue-600" />}
           bg="bg-blue-50"
           value={`${stats.dinners}/4`}
@@ -72,6 +75,7 @@ export default function Dashboard({ foods, meals, shoppingCount, onTabChange, on
           onClick={() => onTabChange("planner")}
         />
         <StatCard
+          index={3}
           icon={<ShoppingCart size={20} className="text-purple-600" />}
           bg="bg-purple-50"
           value={shoppingCount}
@@ -83,18 +87,22 @@ export default function Dashboard({ foods, meals, shoppingCount, onTabChange, on
 
       {/* Urgent items */}
       {urgentFoods.length > 0 && (
-        <div>
+        <div className="section-fade-in" style={{ animationDelay: "0.32s" }}>
           <h3 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
             <AlertTriangle size={16} className="text-orange-500" />
             Cần xử lý sớm
           </h3>
           <div className="space-y-2">
-            {urgentFoods.map((food) => {
+            {urgentFoods.map((food, i) => {
               const status = getExpiryStatus(food.expiryDate);
               const days = getDaysUntilExpiry(food.expiryDate);
               const style = EXPIRY_STYLES[status];
               return (
-                <div key={food.id} className={`flex items-center justify-between rounded-xl p-3 bg-white border ${status === "expired" ? "border-red-200" : status === "critical" ? "border-orange-200" : "border-yellow-200"}`}>
+                <div
+                  key={food.id}
+                  className={`urgent-item-animate flex items-center justify-between rounded-xl p-3 bg-white border ${status === "expired" ? "border-red-200" : status === "critical" ? "border-orange-200" : "border-yellow-200"}`}
+                  style={{ animationDelay: `${0.38 + i * 0.07}s` }}
+                >
                   <div>
                     <span className="font-medium text-slate-700 text-sm">{food.name}</span>
                     <span className="text-xs text-slate-400 ml-2">{food.quantity} {food.unit} · {CATEGORY_LABELS[food.category]}</span>
@@ -111,7 +119,7 @@ export default function Dashboard({ foods, meals, shoppingCount, onTabChange, on
 
       {/* Category breakdown */}
       {foods.length > 0 && (
-        <div>
+        <div className="section-fade-in" style={{ animationDelay: "0.48s" }}>
           <h3 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
             <TrendingDown size={16} className="text-slate-400" />
             Phân loại thực phẩm
@@ -121,7 +129,7 @@ export default function Dashboard({ foods, meals, shoppingCount, onTabChange, on
       )}
 
       {foods.length === 0 && (
-        <div className="text-center py-16 text-slate-400">
+        <div className="empty-bounce-in text-center py-16 text-slate-400">
           <RefrigeratorIcon size={56} className="mx-auto mb-3 opacity-20" />
           <p className="font-semibold text-lg text-slate-500">Chào mừng đến với Quản lý Tủ lạnh!</p>
           <p className="text-sm mt-1">Bắt đầu bằng cách thêm thực phẩm vào tủ lạnh của bạn</p>
@@ -138,8 +146,9 @@ export default function Dashboard({ foods, meals, shoppingCount, onTabChange, on
 }
 
 function StatCard({
-  icon, bg, value, label, sub, onClick, alert,
+  index, icon, bg, value, label, sub, onClick, alert,
 }: {
+  index: number;
   icon: React.ReactNode;
   bg: string;
   value: string | number;
@@ -151,7 +160,8 @@ function StatCard({
   return (
     <button
       onClick={onClick}
-      className={`${bg} rounded-xl p-4 text-left hover:opacity-90 transition-opacity relative`}
+      className={`stat-card-animate ${bg} rounded-xl p-4 text-left hover:scale-[1.03] active:scale-95 transition-transform relative`}
+      style={{ animationDelay: `${index * 0.09}s` }}
     >
       {alert && (
         <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
