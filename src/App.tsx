@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   RefrigeratorIcon, CalendarDays, ShoppingCart, Lightbulb,
-  LayoutDashboard, RefreshCw, Settings, Plus, Share2, LogOut, UserCheck
+  LayoutDashboard, Settings, Plus, Share2, LogOut, UserCheck, RefreshCw
 } from "lucide-react";
 import { DEFAULT_RECIPES } from "./data/defaultRecipes";
 import type { FoodItem, MealPlan, ShoppingItem, Recipe, Fridge } from "./types";
@@ -11,7 +11,6 @@ import ApiKeySettings from "./components/ApiKeySettings";
 import MealPlanner from "./components/MealPlanner";
 import MealSuggestions from "./components/MealSuggestions";
 import ShoppingList from "./components/ShoppingList";
-import SyncData from "./components/SyncData";
 import InstallBanner from "./components/InstallBanner";
 import SmartAddModal from "./components/SmartAddModal";
 import FoodAddedToast from "./components/FoodAddedToast";
@@ -32,7 +31,6 @@ const TABS = [
   { id: "suggestions", label: "Gợi ý món", icon: Lightbulb },
   { id: "planner", label: "Kế hoạch", icon: CalendarDays },
   { id: "shopping", label: "Mua sắm", icon: ShoppingCart },
-  { id: "sync", label: "Đồng bộ", icon: RefreshCw },
 ] as const;
 
 type TabId = typeof TABS[number]["id"];
@@ -73,6 +71,8 @@ function MainApp({
   const [showAddModal, setShowAddModal] = useState(false);
   const [showSharePanel, setShowSharePanel] = useState(false);
   const [toast, setToast] = useState<{ name: string; category: FoodCategory } | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [recipes, setRecipes] = useState<Recipe[]>(() => {
     try {
       const raw = localStorage.getItem("fridge_recipes");
@@ -213,18 +213,21 @@ function MainApp({
     localStorage.setItem("fridge_recipes", JSON.stringify(newRecipes));
   };
 
-  // ── Import ──────────────────────────────────────────────────────
-  const handleImport = (data: { foods: FoodItem[]; meals: MealPlan[]; shopping: ShoppingItem[] }) => {
-    if (isSupabaseConfigured) {
-      fridgeData.setFoods(data.foods);
-      fridgeData.setMeals(data.meals);
-      fridgeData.setShopping(data.shopping);
-    } else {
-      localStore.setFoods(data.foods);
-      localStore.setMeals(data.meals);
-      localStore.setShopping(data.shopping);
+  // ── Refresh ─────────────────────────────────────────────────────
+  const handleRefresh = useCallback(async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      if (isSupabaseConfigured) {
+        await fridgeData.refresh();
+      } else {
+        localStore.reload();
+      }
+      setLastRefreshed(new Date());
+    } finally {
+      setRefreshing(false);
     }
-  };
+  }, [refreshing, fridgeData, localStore]);
 
   const uncheckedShopping = shopping.filter((i) => !i.checked).length;
 
@@ -234,7 +237,6 @@ function MainApp({
     suggestions: "Gợi ý món ăn",
     planner: "Kế hoạch bữa ăn",
     shopping: "Danh sách mua sắm",
-    sync: "Đồng bộ dữ liệu",
   };
 
   const showFab = activeTab === "dashboard" || activeTab === "fridge";
@@ -295,6 +297,22 @@ function MainApp({
             >
               <Plus size={16} />
               Thêm
+            </button>
+
+            {/* Refresh button */}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="relative p-2 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50"
+              title={lastRefreshed ? `Làm mới · cập nhật lúc ${lastRefreshed.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}` : "Làm mới dữ liệu"}
+            >
+              <RefreshCw
+                size={18}
+                className={`text-slate-400 transition-transform ${refreshing ? "animate-spin" : "hover:text-emerald-500"}`}
+              />
+              {lastRefreshed && !refreshing && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full" />
+              )}
             </button>
 
             {/* Share code button — only for fridge owners */}
@@ -413,14 +431,6 @@ function MainApp({
               onToggle={handleToggleShopping}
               onDelete={handleDeleteShopping}
               onClearChecked={handleClearChecked}
-            />
-          )}
-          {activeTab === "sync" && (
-            <SyncData
-              foods={foods}
-              meals={meals}
-              shopping={shopping}
-              onImport={handleImport}
             />
           )}
         </div>

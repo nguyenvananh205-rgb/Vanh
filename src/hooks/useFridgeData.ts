@@ -47,6 +47,7 @@ export interface FridgeDataState {
   setFoods: (foods: FoodItem[]) => void;
   setMeals: (meals: MealPlan[]) => void;
   setShopping: (shopping: ShoppingItem[]) => void;
+  refresh: () => Promise<void>;
 }
 
 export function useFridgeData(fridgeId: string | null, addedByLabel?: string): FridgeDataState {
@@ -243,6 +244,19 @@ export function useFridgeData(fridgeId: string | null, addedByLabel?: string): F
   const setMeals = useCallback((newMeals: MealPlan[]) => setMealsState(newMeals), []);
   const setShopping = useCallback((newShopping: ShoppingItem[]) => setShoppingState(newShopping), []);
 
+  // Manual refresh — re-fetches all data from Supabase
+  const refresh = useCallback(async () => {
+    if (!fridgeId || !isSupabaseConfigured) return;
+    const [dbFoods, dbMeals, dbShopping] = await Promise.all([
+      getFoodItems(fridgeId),
+      getMealPlans(fridgeId),
+      getShoppingItems(fridgeId),
+    ]);
+    setFoodsState(dbFoods.map(dbFoodToApp));
+    setMealsState(dbMeals.map(dbMealToApp));
+    setShoppingState(dbShopping.map(dbShoppingToApp));
+  }, [fridgeId]);
+
   return {
     foods,
     meals,
@@ -261,6 +275,7 @@ export function useFridgeData(fridgeId: string | null, addedByLabel?: string): F
     setFoods,
     setMeals,
     setShopping,
+    refresh,
   };
 }
 
@@ -308,5 +323,11 @@ export function useLocalFridgeStore() {
     return () => window.removeEventListener("storage", handler);
   }, []);
 
-  return { foods, setFoods, meals, setMeals, shopping, setShopping };
+  const reload = useCallback(() => {
+    setFoodsRaw(load(KEYS.foods, null) ?? DEFAULT_FOODS);
+    setMealsRaw(load(KEYS.meals, null) ?? DEFAULT_MEALS);
+    setShoppingRaw(load(KEYS.shopping, null) ?? DEFAULT_SHOPPING);
+  }, []);
+
+  return { foods, setFoods, meals, setMeals, shopping, setShopping, reload };
 }
