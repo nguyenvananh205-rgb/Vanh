@@ -67,6 +67,7 @@ export interface RecipeIngredient {
   quantity: number;
   unit: string;
   optional?: boolean;
+  substitute?: string; // nguyên liệu thay thế khi optional=true
 }
 
 export interface Recipe {

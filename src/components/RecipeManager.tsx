@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { X, Plus, Trash2, Edit2, ChefHat, Clock, Users, Check } from "lucide-react";
+import { X, Plus, Trash2, Edit2, ChefHat, Clock, Users, Check, Loader2, Sparkles } from "lucide-react";
 import type { Recipe, RecipePurpose, DishRole, RecipeIngredient } from "../types";
 import { generateId } from "../utils";
+import { getApiKey } from "../utils/visionParser";
 
 interface Props {
   recipes: Recipe[];
@@ -25,6 +26,14 @@ const ROLE_LABELS: Record<DishRole, string> = {
 const PURPOSES: RecipePurpose[] = ["com_gia_dinh", "healthy", "dac_biet"];
 const ROLES: DishRole[] = ["canh", "rau", "chinh", "phu"];
 
+const INGREDIENT_UNITS = [
+  "gram", "kg", "lạng",
+  "ml", "lít",
+  "quả", "củ", "cái", "cây", "bó", "miếng", "con",
+  "hộp", "túi", "lon", "chai", "ổ",
+  "phần", "muỗng", "chén",
+];
+
 function emptyIngredient(): RecipeIngredient {
   return { name: "", quantity: 1, unit: "gram", optional: false };
 }
@@ -41,6 +50,34 @@ function emptyRecipe(): Omit<Recipe, "id"> {
   };
 }
 
+async function fetchSubstituteSuggestion(ingredientName: string, recipeName: string): Promise<string> {
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error("Chưa có API key");
+
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 60,
+      messages: [
+        {
+          role: "user",
+          content: `Gợi ý 1-2 nguyên liệu thay thế cho "${ingredientName}" trong món "${recipeName || "món ăn Việt Nam"}". Chỉ trả về tên nguyên liệu, cách nhau bằng dấu phẩy, không giải thích.`,
+        },
+      ],
+    }),
+  });
+
+  if (!resp.ok) throw new Error("API lỗi");
+  const data = await resp.json();
+  return (data.content?.[0]?.text ?? "").trim();
+}
+
 interface RecipeFormProps {
   initial?: Recipe;
   onDone: (r: Recipe) => void;
@@ -49,6 +86,7 @@ interface RecipeFormProps {
 
 function RecipeForm({ initial, onDone, onCancel }: RecipeFormProps) {
   const [form, setForm] = useState<Omit<Recipe, "id">>(initial ? { ...initial } : emptyRecipe());
+  const [suggestingIdx, setSuggestingIdx] = useState<number | null>(null);
 
   const setField = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -64,6 +102,20 @@ function RecipeForm({ initial, onDone, onCancel }: RecipeFormProps) {
 
   const addIng = () => setForm((f) => ({ ...f, ingredients: [...f.ingredients, emptyIngredient()] }));
   const removeIng = (idx: number) => setForm((f) => ({ ...f, ingredients: f.ingredients.filter((_, i) => i !== idx) }));
+
+  const handleSuggestSubstitute = async (idx: number) => {
+    const ing = form.ingredients[idx];
+    if (!ing.name.trim()) return;
+    setSuggestingIdx(idx);
+    try {
+      const suggestion = await fetchSubstituteSuggestion(ing.name, form.name);
+      if (suggestion) setIng(idx, "substitute", suggestion);
+    } catch {
+      // silently fail
+    } finally {
+      setSuggestingIdx(null);
+    }
+  };
 
   const valid = form.name.trim() && form.ingredients.some((i) => i.name.trim());
 
@@ -145,47 +197,85 @@ function RecipeForm({ initial, onDone, onCancel }: RecipeFormProps) {
         </div>
         <div className="space-y-2">
           {form.ingredients.map((ing, idx) => (
-            <div key={idx} className="flex gap-1.5 items-center">
-              <input
-                type="text"
-                value={ing.name}
-                onChange={(e) => setIng(idx, "name", e.target.value)}
-                placeholder="Tên nguyên liệu"
-                className="flex-[3] border border-slate-200 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-300"
-              />
-              <input
-                type="number"
-                value={ing.quantity}
-                onChange={(e) => setIng(idx, "quantity", parseFloat(e.target.value) || 0)}
-                min={0}
-                step={0.5}
-                className="flex-1 border border-slate-200 rounded-lg px-2 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-300"
-              />
-              <input
-                type="text"
-                value={ing.unit}
-                onChange={(e) => setIng(idx, "unit", e.target.value)}
-                placeholder="đvt"
-                className="w-14 border border-slate-200 rounded-lg px-2 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-300"
-              />
-              <button
-                onClick={() => setIng(idx, "optional", !ing.optional)}
-                title="Tùy chọn"
-                className={`text-xs px-1.5 py-1.5 rounded-lg border transition-colors ${
-                  ing.optional ? "bg-slate-100 border-slate-300 text-slate-500" : "border-slate-200 text-slate-300 hover:border-slate-300"
-                }`}
-              >
-                tùy
-              </button>
-              {form.ingredients.length > 1 && (
-                <button onClick={() => removeIng(idx)} className="text-red-400 hover:text-red-600 p-1">
-                  <Trash2 size={13} />
-                </button>
+            <div key={idx} className="space-y-1.5">
+              {/* Main ingredient row */}
+              <div className="flex gap-1.5 items-center">
+                <input
+                  type="text"
+                  value={ing.name}
+                  onChange={(e) => setIng(idx, "name", e.target.value)}
+                  placeholder="Tên nguyên liệu"
+                  className="flex-[3] border border-slate-200 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-300"
+                />
+                <input
+                  type="number"
+                  value={ing.quantity}
+                  onChange={(e) => setIng(idx, "quantity", parseFloat(e.target.value) || 0)}
+                  min={0}
+                  step={0.5}
+                  className="flex-1 border border-slate-200 rounded-lg px-2 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-300"
+                />
+                <select
+                  value={ing.unit}
+                  onChange={(e) => setIng(idx, "unit", e.target.value)}
+                  className="w-20 border border-slate-200 rounded-lg px-1.5 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-emerald-300"
+                >
+                  {INGREDIENT_UNITS.map((u) => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
+                {/* Optional checkbox */}
+                <label
+                  title="Nguyên liệu tùy chọn — có thể bỏ qua hoặc thay thế"
+                  className="flex items-center gap-1 cursor-pointer select-none shrink-0"
+                >
+                  <input
+                    type="checkbox"
+                    checked={!!ing.optional}
+                    onChange={(e) => setIng(idx, "optional", e.target.checked)}
+                    className="w-3.5 h-3.5 accent-amber-400 cursor-pointer"
+                  />
+                  <span className={`text-xs ${ing.optional ? "text-amber-600 font-medium" : "text-slate-400"}`}>
+                    tùy
+                  </span>
+                </label>
+                {form.ingredients.length > 1 && (
+                  <button onClick={() => removeIng(idx)} className="text-red-400 hover:text-red-600 p-1 shrink-0">
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
+
+              {/* Substitute ingredient row — shown only when optional */}
+              {ing.optional && (
+                <div className="flex gap-1.5 items-center pl-4">
+                  <span className="text-xs text-slate-400 shrink-0">↳ thay bằng:</span>
+                  <input
+                    type="text"
+                    value={ing.substitute ?? ""}
+                    onChange={(e) => setIng(idx, "substitute", e.target.value)}
+                    placeholder="Nguyên liệu thay thế..."
+                    className="flex-1 border border-amber-200 bg-amber-50 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-amber-300"
+                  />
+                  <button
+                    onClick={() => handleSuggestSubstitute(idx)}
+                    disabled={!ing.name.trim() || suggestingIdx === idx}
+                    title="AI gợi ý nguyên liệu thay thế"
+                    className="flex items-center gap-1 text-xs px-2 py-1.5 bg-violet-50 border border-violet-200 text-violet-600 hover:bg-violet-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shrink-0 transition-colors"
+                  >
+                    {suggestingIdx === idx ? (
+                      <Loader2 size={11} className="animate-spin" />
+                    ) : (
+                      <Sparkles size={11} />
+                    )}
+                    AI
+                  </button>
+                </div>
               )}
             </div>
           ))}
         </div>
-        <p className="text-xs text-slate-400 mt-1.5">Nhấn "tùy" để đánh dấu nguyên liệu tùy chọn</p>
+        <p className="text-xs text-slate-400 mt-1.5">Tick "tùy" để đánh dấu nguyên liệu có thể bỏ qua hoặc thay thế</p>
       </div>
 
       <div>
