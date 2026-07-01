@@ -8,6 +8,7 @@ import {
   addFoodItem,
   updateFoodItem,
   deleteFoodItem,
+  deleteAllFoodItems,
   addMealPlan,
   deleteMealPlan,
   addShoppingItem,
@@ -37,6 +38,7 @@ export interface FridgeDataState {
   addFood: (item: Omit<FoodItem, "id">, addedBy?: string) => Promise<void>;
   updateFood: (item: FoodItem) => Promise<void>;
   deleteFood: (id: string) => Promise<void>;
+  deleteAllFoods: () => Promise<void>;
   addMeal: (meal: Omit<MealPlan, "id" | "ingredientIds">) => Promise<void>;
   deleteMeal: (id: string) => Promise<void>;
   addShopping: (item: Omit<ShoppingItem, "id">) => Promise<void>;
@@ -174,6 +176,16 @@ export function useFridgeData(fridgeId: string | null, addedByLabel?: string): F
     setFoodsState((prev) => prev.filter((f) => f.id !== id));
   }, []);
 
+  const deleteAllFoods = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      setFoodsState([]);
+      return;
+    }
+    if (!fridgeId) return;
+    await deleteAllFoodItems(fridgeId);
+    setFoodsState([]);
+  }, [fridgeId]);
+
   const addMeal = useCallback(async (meal: Omit<MealPlan, "id" | "ingredientIds">) => {
     if (!fridgeId || !isSupabaseConfigured) return;
     const db = await addMealPlan(fridgeId, meal);
@@ -265,6 +277,7 @@ export function useFridgeData(fridgeId: string | null, addedByLabel?: string): F
     addFood,
     updateFood,
     deleteFood,
+    deleteAllFoods,
     addMeal,
     deleteMeal,
     addShopping,

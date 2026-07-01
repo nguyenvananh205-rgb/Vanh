@@ -19,6 +19,7 @@ interface Props {
   foods: FoodItem[];
   onUpdate: (item: FoodItem) => void;
   onDelete: (id: string) => void;
+  onDeleteAll: () => Promise<void>;
   onOpenAdd: () => void;
 }
 
@@ -107,7 +108,7 @@ function BulkUpdateModal({
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-export default function FridgeInventory({ foods, onUpdate, onDelete, onOpenAdd }: Props) {
+export default function FridgeInventory({ foods, onUpdate, onDelete, onDeleteAll, onOpenAdd }: Props) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editing, setEditing] = useState<FoodItem | null>(null);
   const [search, setSearch] = useState("");
@@ -278,6 +279,18 @@ export default function FridgeInventory({ foods, onUpdate, onDelete, onOpenAdd }
             >
               <CheckSquare size={15} /> Chọn
             </button>
+            {foods.length > 0 && (
+              <button
+                onClick={() => {
+                  if (confirm(`Xóa tất cả ${foods.length} thực phẩm khỏi tủ lạnh? Hành động này không thể hoàn tác.`)) {
+                    onDeleteAll();
+                  }
+                }}
+                className="flex items-center gap-1.5 border border-red-200 text-red-600 px-3 py-2 rounded-lg text-sm hover:bg-red-50 transition-colors"
+              >
+                <Trash2 size={15} /> Xóa tất cả
+              </button>
+            )}
             <button
               onClick={onOpenAdd}
               className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"

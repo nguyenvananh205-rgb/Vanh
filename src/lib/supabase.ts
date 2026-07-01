@@ -237,6 +237,11 @@ export async function deleteFoodItem(id: string) {
   if (error) throw error;
 }
 
+export async function deleteAllFoodItems(fridgeId: string) {
+  const { error } = await supabase.from("food_items").delete().eq("fridge_id", fridgeId);
+  if (error) throw error;
+}
+
 // ── Meal Plans ──────────────────────────────────────────────────
 export type DbMealPlan = {
   id: string;

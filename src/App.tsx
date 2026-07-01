@@ -128,6 +128,14 @@ function MainApp({
     }
   };
 
+  const handleDeleteAllFoods = async () => {
+    if (isSupabaseConfigured) {
+      await fridgeData.deleteAllFoods();
+    } else {
+      localStore.setFoods([]);
+    }
+  };
+
   // ── Meal handlers ──────────────────────────────────────────────
   const handleAddMeal = async (meal: MealPlan) => {
     if (isSupabaseConfigured) {
@@ -399,6 +407,7 @@ function MainApp({
               foods={foods}
               onUpdate={handleUpdateFood}
               onDelete={handleDeleteFood}
+              onDeleteAll={handleDeleteAllFoods}
               onOpenAdd={() => setShowAddModal(true)}
             />
           )}
