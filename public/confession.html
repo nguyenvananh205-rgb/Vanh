@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>💌 Lời Tỏ Tình</title>
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg:     #0e0b1a;
+  --bg2:    #1a1030;
+  --rose:   #e879a0;
+  --violet: #9b72cf;
+  --cream:  #f5e6d3;
+  --gold:   #c8a97e;
+  --text:   #ede8ff;
+  --muted:  #7a6b96;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Georgia, 'Times New Roman', serif;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+/* ── SLIDES ── */
+.slide {
+  position: fixed; inset: 0; z-index: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.slide.active { opacity: 1; pointer-events: all; }
+
+/* ══════════════════════════════
+   SLIDE 1 — dodge
+══════════════════════════════ */
+.s1-question {
+  font-size: clamp(1.25rem, 4.2vw, 2rem);
+  text-align: center;
+  color: var(--cream);
+  line-height: 1.85;
+  max-width: 580px;
+  padding: 0 2rem;
+  text-wrap: balance;
+  text-shadow: 0 0 50px rgba(232,121,160,0.22);
+  margin-bottom: 3.5rem;
+  position: relative; z-index: 2;
+}
+
+#btn-yes {
+  position: relative; z-index: 2;
+  padding: 1rem 2.8rem;
+  background: linear-gradient(135deg, #e879a0 0%, #9b72cf 100%);
+  color: #fff;
+  font-family: Georgia, serif;
+  font-size: 1.1rem;
+  border: none; border-radius: 2rem;
+  cursor: pointer;
+  box-shadow: 0 4px 28px rgba(232,121,160,0.38);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+#btn-yes:hover { transform: scale(1.07); box-shadow: 0 6px 36px rgba(232,121,160,0.55); }
+
+#btn-no {
+  position: fixed; z-index: 20;
+  padding: 0.85rem 2rem;
+  background: var(--bg2);
+  color: var(--muted);
+  font-family: Georgia, serif;
+  font-size: 0.95rem;
+  border: 1px solid rgba(122,107,150,0.28);
+  border-radius: 2rem;
+  cursor: default;
+  transition: left 0.26s ease, top 0.26s ease, opacity 0.9s;
+  will-change: left, top;
+}
+
+/* ══════════════════════════════
+   SLIDE 2 — dust wipe
+══════════════════════════════ */
+.s2-text {
+  font-size: clamp(1.1rem, 3.6vw, 1.65rem);
+  text-align: center;
+  line-height: 2.2;
+  color: var(--cream);
+  max-width: 540px;
+  padding: 0 2rem;
+  text-shadow: 0 0 28px rgba(200,169,126,0.32);
+  position: relative; z-index: 1;
+  pointer-events: none;
+  font-style: italic;
+}
+
+.s2-hint {
+  position: absolute; bottom: 2.8rem;
+  font-size: 0.73rem;
+  color: var(--muted);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  z-index: 4;
+  animation: pulse-hint 2.2s ease-in-out infinite;
+  transition: opacity 0.5s ease;
+}
+@keyframes pulse-hint { 0%,100%{opacity:.55} 50%{opacity:1} }
+
+#dust-canvas { position: absolute; inset: 0; z-index: 2; cursor: crosshair; touch-action: none; }
+
+/* ══════════════════════════════
+   SLIDE 3 — matrix
+══════════════════════════════ */
+#matrix-canvas { position: absolute; inset: 0; }
+
+/* ══════════════════════════════
+   SLIDE 4 — petals
+══════════════════════════════ */
+#petal-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+
+.s4-content {
+  position: relative; z-index: 1;
+  text-align: center;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 2.2rem;
+}
+
+.s4-text {
+  font-size: clamp(1.15rem, 3.8vw, 1.75rem);
+  line-height: 2.1;
+  color: var(--cream);
+  max-width: 480px; padding: 0 2rem;
+  font-style: italic;
+  opacity: 0; transform: translateY(14px);
+  transition: opacity 1.3s ease, transform 1.3s ease;
+  text-shadow: 0 0 28px rgba(232,121,160,0.2);
+}
+.s4-text.show { opacity: 1; transform: translateY(0); }
+
+.s4-btn {
+  padding: 0.8rem 2.2rem;
+  background: transparent;
+  color: var(--rose);
+  border: 1px solid rgba(232,121,160,0.4);
+  font-family: Georgia, serif;
+  font-size: 0.92rem;
+  border-radius: 2rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 1s ease 0.6s, background 0.2s, box-shadow 0.2s;
+}
+.s4-btn.show { opacity: 1; }
+.s4-btn:hover { background: rgba(232,121,160,0.1); box-shadow: 0 0 20px rgba(232,121,160,0.2); }
+
+/* ══════════════════════════════
+   SLIDE 5 — finale
+══════════════════════════════ */
+#heart-canvas { position: absolute; inset: 0; pointer-events: none; }
+
+.s5-content {
+  position: relative; z-index: 1;
+  text-align: center;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 0.6rem;
+}
+
+.s5-line {
+  font-style: italic;
+  color: var(--cream);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.s5-line.show { opacity: 1; transform: translateY(0); }
+
+.s5-line.buildup {
+  font-size: clamp(0.9rem, 2.8vw, 1.25rem);
+  color: var(--text);
+  opacity: 0;
+}
+.s5-line.punchline {
+  font-size: clamp(1.6rem, 6vw, 3rem);
+  color: var(--cream);
+  margin-top: 0.8rem;
+  text-shadow: 0 0 60px rgba(232,121,160,0.65), 0 0 120px rgba(155,114,207,0.25);
+}
+
+/* ══════════════════════════════
+   MUSIC BUTTON
+══════════════════════════════ */
+#music-btn {
+  position: fixed;
+  bottom: 1.4rem; right: 1.4rem;
+  z-index: 200;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: rgba(14,11,26,0.75);
+  border: 1px solid rgba(232,121,160,0.25);
+  color: var(--muted);
+  font-size: 1.15rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+#music-btn:hover { border-color: var(--rose); color: var(--rose); }
+#music-btn.playing { border-color: rgba(232,121,160,0.5); color: var(--rose); }
+#music-btn.playing .icon { display: inline-block; animation: note-dance 1.8s ease-in-out infinite; }
+@keyframes note-dance {
+  0%,100% { transform: translateY(0) rotate(-8deg); }
+  50%      { transform: translateY(-3px) rotate(8deg); }
+}
+
+/* ── A11Y ── */
+@media (prefers-reduced-motion: reduce) {
+  .slide, .s5-line, .s4-text, .s4-btn { transition: none; }
+  .s2-hint, #music-btn .icon { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Nhạc nền: "Anh là ngoại lệ của em" - Phương Linh -->
+<!-- Để phát nhạc: đặt file MP3 cùng thư mục và đặt tên: anh-la-ngoai-le.mp3 -->
+<audio id="bgm" loop preload="auto">
+  <source src="anh-la-ngoai-le.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Nút phát nhạc -->
+<button id="music-btn" title="Bật / Tắt nhạc" aria-label="Bật tắt nhạc nền">
+  <span class="icon">♪</span>
+</button>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- ── SLIDE 1: dodge ── -->
+<div class="slide active" id="slide-1">
+  <p class="s1-question" id="q1-text"></p>
+  <button id="btn-yes"></button>
+</div>
+<button id="btn-no"></button>
+
+<!-- ── SLIDE 2: dust wipe ── -->
+<div class="slide" id="slide-2">
+  <div class="s2-text" id="q2-text"></div>
+  <span class="s2-hint" id="s2-hint">✦ Vuốt ngón tay để khám phá ✦</span>
+  <canvas id="dust-canvas"></canvas>
+</div>
+
+<!-- ── SLIDE 3: matrix → text ── -->
+<div class="slide" id="slide-3">
+  <canvas id="matrix-canvas"></canvas>
+</div>
+
+<!-- ── SLIDE 4: petals ── -->
+<div class="slide" id="slide-4">
+  <canvas id="petal-canvas"></canvas>
+  <div class="s4-content">
+    <div class="s4-text" id="q4-text"></div>
+    <button class="s4-btn" id="btn-next4">Tiếp tục →</button>
+  </div>
+</div>
+
+<!-- ── SLIDE 5: finale ── -->
+<div class="slide" id="slide-5">
+  <canvas id="heart-canvas"></canvas>
+  <div class="s5-content" id="s5-content"></div>
+</div>
+
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════
+   CONFIG — chỉnh nội dung tại đây
+══════════════════════════════════════════════ */
+const CFG = {
+  q1: {
+    question: ['Chồng ơi, trái đất hình tròn.', 'Trốn mà không kỹ — cả đời gặp em.'],
+    no:  'Không trốn',   // nút chạy trốn (không click được)
+    yes: 'Trốn kỹ',     // nút chuyển slide
+  },
+  q2: [
+    'Bao năm anh cục súc',
+    'với thiên hạ,',
+    'lại vì một người lạ',
+    'mà dịu dàng',
+    'với thế gian.'
+  ],
+  q3: [
+    'Anh nói thích cơn mưa,',
+    'em liền là mùa hạ.',
+    'Anh thích người thưa dạ —',
+    'vâng ạ, có em đây.'
+  ],
+  q4: [
+    'Yêu chồng không nằm',
+    'trong dự tính.',
+    'Là do em tự dính.'
+  ],
+  q5: [
+    'Sáng ăn bún chả.',
+    'Trưa uống trà chanh.',
+    'Chiều để dành bụng.',
+    'Tối về ăn anh ~~~',
+  ],
+};
+
+/* ══════════════════════════════════════════════
+   SLIDE MANAGER
+══════════════════════════════════════════════ */
+let curSlide = 1;
+
+function goTo(n) {
+  if (n === curSlide) return;
+  const prev = document.getElementById('slide-' + curSlide);
+  const next = document.getElementById('slide-' + n);
+  if (curSlide === 1) {
+    document.getElementById('btn-no').style.opacity = '0';
+    document.getElementById('btn-no').style.pointerEvents = 'none';
+  }
+  prev.classList.remove('active');
+  curSlide = n;
+  setTimeout(() => {
+    next.classList.add('active');
+    onActivate(n);
+  }, 650);
+}
+
+function onActivate(n) {
+  ([, null, initSlide2, initSlide3, initSlide4, initSlide5])[n]?.();
+}
+
+/* ══════════════════════════════════════════════
+   NHẠC NỀN
+══════════════════════════════════════════════ */
+(function () {
+  const audio = document.getElementById('bgm');
+  const btn   = document.getElementById('music-btn');
+  let playing = false;
+
+  const tryPlay = () => {
+    audio.volume = 0.45;
+    audio.play().then(() => {
+      playing = true;
+      btn.classList.add('playing');
+    }).catch(() => {
+      // Bị chặn bởi CSP hoặc browser policy — nút vẫn hiện
+    });
+  };
+
+  btn.addEventListener('click', () => {
+    if (!playing) {
+      tryPlay();
+    } else {
+      audio.pause();
+      playing = false;
+      btn.classList.remove('playing');
+    }
+  });
+
+  // Thử autoplay sau tương tác đầu tiên
+  const firstInteraction = () => {
+    if (!playing) tryPlay();
+    document.removeEventListener('click',      firstInteraction);
+    document.removeEventListener('touchstart', firstInteraction);
+  };
+  document.addEventListener('click',      firstInteraction, { once: true });
+  document.addEventListener('touchstart', firstInteraction, { once: true, passive: true });
+})();
+
+/* ══════════════════════════════════════════════
+   BACKGROUND — sao nhấp nháy
+══════════════════════════════════════════════ */
+(function () {
+  const c   = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  const resize = () => { c.width = innerWidth; c.height = innerHeight; };
+  resize();
+  addEventListener('resize', resize);
+
+  const stars = Array.from({ length: 180 }, () => ({
+    rx: Math.random(), ry: Math.random(),
+    r:  0.25 + Math.random() * 1.3,
+    ph: Math.random() * Math.PI * 2,
+    sp: 0.35 + Math.random() * 0.9,
+  }));
+  const glows = Array.from({ length: 5 }, () => ({
+    rx: Math.random(), ry: Math.random(),
+    r:  60 + Math.random() * 90,
+    col: Math.random() > 0.5 ? 'rgba(232,121,160,0.03)' : 'rgba(155,114,207,0.04)',
+  }));
+
+  (function tick() {
+    requestAnimationFrame(tick);
+    ctx.clearRect(0, 0, c.width, c.height);
+    const t = performance.now() * 0.001;
+    glows.forEach(g => {
+      const grd = ctx.createRadialGradient(
+        g.rx*c.width, g.ry*c.height, 0,
+        g.rx*c.width, g.ry*c.height, g.r
+      );
+      grd.addColorStop(0, g.col); grd.addColorStop(1, 'transparent');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, c.width, c.height);
+    });
+    stars.forEach(s => {
+      const a = 0.15 + 0.55 * (0.5 + 0.5 * Math.sin(t * s.sp + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.rx * c.width, s.ry * c.height, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(245,230,211,${a})`;
+      ctx.fill();
+    });
+  })();
+})();
+
+/* ══════════════════════════════════════════════
+   SLIDE 1 — nút chạy trốn
+══════════════════════════════════════════════ */
+(function () {
+  const qEl   = document.getElementById('q1-text');
+  const btnYes = document.getElementById('btn-yes');
+  const btnNo  = document.getElementById('btn-no');
+
+  // Render câu hỏi 2 dòng
+  qEl.innerHTML = '';
+  CFG.q1.question.forEach((line, i) => {
+    qEl.appendChild(document.createTextNode(line));
+    if (i < CFG.q1.question.length - 1) {
+      const br = document.createElement('br');
+      qEl.appendChild(br);
+    }
+  });
+  btnYes.textContent = CFG.q1.yes;
+  btnNo.textContent  = CFG.q1.no;
+
+  let noX = innerWidth / 2 + 170, noY = innerHeight / 2 + 75;
+  let lastFlee = 0;
+
+  const placeNo = (x, y, anim) => {
+    noX = x; noY = y;
+    btnNo.style.transition = anim
+      ? 'left 0.26s ease, top 0.26s ease, opacity 0.9s'
+      : 'opacity 0.9s';
+    btnNo.style.left      = x + 'px';
+    btnNo.style.top       = y + 'px';
+    btnNo.style.transform = 'translate(-50%, -50%)';
+  };
+  placeNo(noX, noY, false);
+
+  const flee = () => {
+    const now = Date.now();
+    if (now - lastFlee < 80) return;
+    lastFlee = now;
+    const M = 88, W = innerWidth, H = innerHeight;
+    let nx, ny, tries = 0;
+    do {
+      nx = M + Math.random() * (W - 2*M);
+      ny = M + Math.random() * (H - 2*M);
+      tries++;
+    } while (Math.hypot(nx - noX, ny - noY) < 100 && tries < 30);
+    placeNo(nx, ny, true);
+  };
+
+  addEventListener('mousemove', e => {
+    if (curSlide !== 1) return;
+    const r = btnNo.getBoundingClientRect();
+    if (Math.hypot(e.clientX - (r.left + r.width/2), e.clientY - (r.top + r.height/2)) < 130) flee();
+  });
+  btnNo.addEventListener('click',      flee);
+  btnNo.addEventListener('touchstart', e => { e.preventDefault(); flee(); }, { passive: false });
+
+  const yes = () => { if (curSlide === 1) goTo(2); };
+  btnYes.addEventListener('click', yes);
+  btnYes.addEventListener('touchstart', e => { e.preventDefault(); yes(); }, { passive: false });
+})();
+
+/* ══════════════════════════════════════════════
+   SLIDE 2 — wipe bụi
+══════════════════════════════════════════════ */
+function initSlide2() {
+  const el = document.getElementById('q2-text');
+  el.innerHTML = '';
+  CFG.q2.forEach((line, i) => {
+    el.appendChild(document.createTextNode(line));
+    if (i < CFG.q2.length - 1) el.appendChild(document.createElement('br'));
+  });
+
+  const canvas = document.getElementById('dust-canvas');
+  const ctx    = canvas.getContext('2d');
+  canvas.width = innerWidth; canvas.height = innerHeight;
+  const W = canvas.width, H = canvas.height;
+  const rng = Math.random.bind(Math);
+
+  // Nền bụi
+  ctx.fillStyle = '#0e0b1a';
+  ctx.fillRect(0, 0, W, H);
+
+  const dustPalette = [
+    [200,169,126], [180,148,90], [155,114,207], [232,121,160], [138,108,68]
+  ];
+  for (let i = 0; i < 5500; i++) {
+    const [R,G,B] = dustPalette[Math.floor(rng() * dustPalette.length)];
+    ctx.beginPath();
+    ctx.arc(rng()*W, rng()*H, 0.8 + rng()*3.5, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(${R},${G},${B},${0.1 + rng()*0.55})`;
+    ctx.fill();
+  }
+  for (let i = 0; i < 80; i++) {
+    const x = rng()*W, y = rng()*H, r = 8 + rng()*22;
+    const grd = ctx.createRadialGradient(x,y,0,x,y,r);
+    grd.addColorStop(0, `rgba(200,169,126,${0.06 + rng()*0.09})`);
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.fillRect(x-r, y-r, r*2, r*2);
+  }
+
+  const hint = document.getElementById('s2-hint');
+  let down = false, started = false, strokes = 0;
+  let timer = null;
+  const THRESHOLD = 150;
+
+  const advance = () => {
+    clearTimeout(timer);
+    canvas.style.transition = 'opacity 2s ease';
+    canvas.style.opacity    = '0';
+    hint.style.opacity      = '0';
+    setTimeout(() => goTo(3), 2200);
+  };
+
+  const brush = (x, y) => {
+    if (!started) {
+      started = true;
+      hint.style.opacity = '0';
+      timer = setTimeout(advance, 10000);
+    }
+    ctx.globalCompositeOperation = 'destination-out';
+    for (let i = 0; i < 24; i++) {
+      const a = rng()*Math.PI*2, d = rng()*58;
+      ctx.beginPath();
+      ctx.arc(x + Math.cos(a)*d, y + Math.sin(a)*d, 5 + rng()*18, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(0,0,0,${0.35 + rng()*0.55})`;
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    if (++strokes > THRESHOLD) advance();
+  };
+
+  canvas.addEventListener('mousedown',  e => { down=true; brush(e.clientX, e.clientY); });
+  canvas.addEventListener('mousemove',  e => { if(down) brush(e.clientX, e.clientY); });
+  canvas.addEventListener('mouseup',    () => { down=false; });
+  canvas.addEventListener('mouseleave', () => { down=false; });
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); brush(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
+  canvas.addEventListener('touchmove',  e => { e.preventDefault(); brush(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
+}
+
+/* ══════════════════════════════════════════════
+   SLIDE 3 — matrix → text
+══════════════════════════════════════════════ */
+function initSlide3() {
+  const canvas = document.getElementById('matrix-canvas');
+  const ctx    = canvas.getContext('2d');
+  canvas.width = innerWidth; canvas.height = innerHeight;
+  const W = canvas.width, H = canvas.height;
+
+  const CHARS = '01アイウエオカキクABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%&?<>{}∑∞∂√';
+  const rc    = () => CHARS[Math.floor(Math.random() * CHARS.length)];
+
+  // Matrix rain
+  const COL = 18, cols = Math.floor(W / COL);
+  const drops = Array.from({length: cols}, () => ({
+    y: -Math.floor(Math.random()*20), speed: 0.4 + Math.random()*1.1,
+    trail: Array.from({length:20}, rc),
+  }));
+
+  // Text sample từ offscreen canvas
+  const fontSize  = Math.min(42, Math.floor(W/11));
+  const lineH     = fontSize * 1.65;
+  const lines     = CFG.q3;
+  const startY    = H/2 - (lines.length * lineH)/2 + fontSize;
+
+  const off    = document.createElement('canvas');
+  off.width    = W; off.height = H;
+  const offCtx = off.getContext('2d');
+  offCtx.font      = `italic bold ${fontSize}px Georgia, serif`;
+  offCtx.fillStyle = '#fff';
+  offCtx.textAlign = 'center';
+  lines.forEach((ln, i) => offCtx.fillText(ln, W/2, startY + i*lineH));
+
+  const imgData = offCtx.getImageData(0, 0, W, H).data;
+  const targets = [];
+  const step    = 7;
+  for (let y = 0; y < H; y += step)
+    for (let x = 0; x < W; x += step)
+      if (imgData[(y*W+x)*4+3] > 100) targets.push({x, y});
+  for (let i = targets.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [targets[i], targets[j]] = [targets[j], targets[i]];
+  }
+
+  const MAX_P = Math.min(targets.length, 700);
+  const ptcl  = targets.slice(0, MAX_P).map(t => ({
+    x: Math.random()*W, y: Math.random()*H,
+    tx: t.x, ty: t.y,
+    ch: rc(), spd: 0.045 + Math.random()*0.065,
+    tick: 0, done: false,
+  }));
+
+  let phase = 1, animId, frameN = 0, ph2Start = 0, finalized = false;
+
+  const rainFrame = () => {
+    ctx.fillStyle = 'rgba(14,11,26,0.16)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.font = `${COL-3}px "Courier New", monospace`;
+    drops.forEach((d, i) => {
+      d.trail.forEach((ch, ci) => {
+        const yy = d.y*COL - ci*COL;
+        if (yy < 0 || yy > H) return;
+        const fade = 1 - ci/d.trail.length;
+        ctx.fillStyle = ci===0
+          ? `rgba(245,230,211,${fade*0.9})`
+          : (i%3===0 ? `rgba(232,121,160,${fade*0.55})` : `rgba(155,114,207,${fade*0.4})`);
+        ctx.fillText(ch, i*COL, yy);
+      });
+      if (++d.tick % 5 === 0) { d.trail.unshift(rc()); d.trail.pop(); }
+      d.y += d.speed;
+      if (d.y*COL > H + COL*20) { d.y = -Math.floor(Math.random()*10); }
+    });
+  };
+
+  const formFrame = () => {
+    const elapsed = performance.now() - ph2Start;
+    ctx.fillStyle = 'rgba(14,11,26,0.22)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.font = '13px "Courier New", monospace';
+    let rem = 0;
+    ptcl.forEach(p => {
+      if (!p.done) {
+        p.x += (p.tx - p.x)*p.spd;
+        p.y += (p.ty - p.y)*p.spd;
+        if (++p.tick % 5 === 0) p.ch = rc();
+        if (Math.hypot(p.x-p.tx, p.y-p.ty) < 1.8) { p.x=p.tx; p.y=p.ty; p.done=true; }
+        else rem++;
+      }
+      const t = Math.min(elapsed/3500, 1);
+      ctx.fillStyle = p.done
+        ? `rgba(245,230,211,${0.82 + Math.random()*0.15})`
+        : `rgba(155,114,207,${0.35 + t*0.5})`;
+      ctx.fillText(p.ch, p.x, p.y);
+    });
+    if (!finalized && (rem===0 || elapsed > 7500)) {
+      finalized = true;
+      ctx.clearRect(0, 0, W, H);
+      ctx.textAlign   = 'center';
+      ctx.font        = `italic bold ${fontSize}px Georgia, serif`;
+      ctx.shadowBlur  = 40;
+      ctx.shadowColor = 'rgba(232,121,160,0.7)';
+      ctx.fillStyle   = '#f5e6d3';
+      lines.forEach((ln, i) => ctx.fillText(ln, W/2, startY + i*lineH));
+      ctx.shadowBlur  = 0;
+      cancelAnimationFrame(animId);
+      setTimeout(() => goTo(4), 3200);
+    }
+  };
+
+  (function loop() {
+    animId = requestAnimationFrame(loop);
+    frameN++;
+    if (phase === 1) {
+      rainFrame();
+      if (frameN > 230) { phase = 2; ph2Start = performance.now(); ctx.clearRect(0,0,W,H); }
+    } else formFrame();
+  })();
+}
+
+/* ══════════════════════════════════════════════
+   SLIDE 4 — cánh hoa rơi + text
+══════════════════════════════════════════════ */
+function initSlide4() {
+  const el = document.getElementById('q4-text');
+  el.innerHTML = '';
+  CFG.q4.forEach((line, i) => {
+    el.appendChild(document.createTextNode(line));
+    if (i < CFG.q4.length-1) el.appendChild(document.createElement('br'));
+  });
+
+  const canvas = document.getElementById('petal-canvas');
+  const ctx    = canvas.getContext('2d');
+  canvas.width = innerWidth; canvas.height = innerHeight;
+  const W = canvas.width, H = canvas.height;
+
+  const petals = Array.from({length:30}, () => ({
+    x:  Math.random()*W,
+    y:  -20 - Math.random()*H*0.8,
+    sz: 7 + Math.random()*11,
+    sp: 0.35 + Math.random()*0.7,
+    a:  Math.random()*Math.PI*2,
+    rs: (Math.random()-0.5)*0.025,
+    dr: (Math.random()-0.5)*0.4,
+    op: 0.3 + Math.random()*0.4,
+    h:  325 + Math.floor(Math.random()*30),
+    l:  68 + Math.floor(Math.random()*12),
+  }));
+
+  const drawPetal = (sz, h, l, op) => {
+    ctx.save();
+    ctx.globalAlpha = op;
+    ctx.beginPath();
+    ctx.ellipse(0, -sz*0.5, sz*0.3, sz*0.55, 0, 0, Math.PI*2);
+    ctx.fillStyle = `hsl(${h},60%,${l}%)`;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(0, -sz*0.5, sz*0.08, sz*0.44, 0, 0, Math.PI*2);
+    ctx.fillStyle = `hsla(${h},40%,${l+12}%,0.38)`;
+    ctx.fill();
+    ctx.restore();
+  };
+
+  let animId;
+  (function loop() {
+    animId = requestAnimationFrame(loop);
+    ctx.clearRect(0, 0, W, H);
+    petals.forEach(p => {
+      p.y += p.sp; p.x += p.dr; p.a += p.rs;
+      if (p.y > H+30) { p.y = -20; p.x = Math.random()*W; }
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a);
+      drawPetal(p.sz, p.h, p.l, p.op);
+      ctx.restore();
+    });
+  })();
+
+  setTimeout(() => {
+    el.classList.add('show');
+    document.getElementById('btn-next4').classList.add('show');
+  }, 1200);
+
+  const next = () => { cancelAnimationFrame(animId); goTo(5); };
+  const btn4 = document.getElementById('btn-next4');
+  btn4.addEventListener('click',      next);
+  btn4.addEventListener('touchstart', e => { e.preventDefault(); next(); }, {passive:false});
+}
+
+/* ══════════════════════════════════════════════
+   SLIDE 5 — tim nổ + reveal từng dòng
+══════════════════════════════════════════════ */
+function initSlide5() {
+  const content = document.getElementById('s5-content');
+  content.innerHTML = '';
+
+  // Render 3 dòng buildup + 1 dòng punchline
+  const lineEls = CFG.q5.map((text, i) => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    div.className   = 's5-line ' + (i < CFG.q5.length-1 ? 'buildup' : 'punchline');
+    content.appendChild(div);
+    return div;
+  });
+
+  const canvas = document.getElementById('heart-canvas');
+  const ctx    = canvas.getContext('2d');
+  canvas.width = innerWidth; canvas.height = innerHeight;
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2;
+
+  // Hình tim parametric
+  const heartPt = (t, sc) => ({
+    x: sc * 16 * Math.pow(Math.sin(t), 3),
+    y: sc * -(13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t)),
+  });
+
+  const sc = Math.min(W,H)*0.047;
+  const BURST = 110;
+  const burst = Array.from({length:BURST}, (_, i) => {
+    const t  = (i/BURST)*Math.PI*2;
+    const hp = heartPt(t, sc);
+    const tx = cx+hp.x, ty = cy+hp.y;
+    const angle = Math.atan2(ty-cy, tx-cx);
+    const spd   = 3 + Math.random()*7;
+    return {
+      x:cx, y:cy, vx:Math.cos(angle)*spd, vy:Math.sin(angle)*spd,
+      tx, ty, sz:9 + Math.random()*8, alpha:1,
+      ch:['♡','♥','❤','✦'][Math.floor(Math.random()*4)],
+      hue:320+Math.floor(Math.random()*40), settled:false,
+    };
+  });
+
+  const floaters = Array.from({length:35}, () => ({
+    x:Math.random()*W, y:H+10+Math.random()*120,
+    vy:-(0.25+Math.random()*0.6), sz:10+Math.random()*18,
+    a:0.12+Math.random()*0.3, dr:(Math.random()-0.5)*0.25,
+    ph:Math.random()*Math.PI*2,
+  }));
+
+  let frame = 0, phase = 1;
+  // Reveal dòng chữ theo thứ tự
+  const revealLine = (idx) => {
+    if (idx >= lineEls.length) return;
+    lineEls[idx].classList.add('show');
+    if (idx < lineEls.length-1) setTimeout(() => revealLine(idx+1), 900);
+  };
+
+  (function loop() {
+    requestAnimationFrame(loop);
+    ctx.clearRect(0, 0, W, H);
+    frame++;
+
+    ctx.textAlign = 'center';
+    if (phase === 1) {
+      burst.forEach(p => {
+        if (!p.settled) {
+          p.x+=p.vx; p.y+=p.vy; p.vx*=0.9; p.vy*=0.9;
+          if (Math.abs(p.vx) < 0.15) { p.settled=true; p.x=p.tx; p.y=p.ty; }
+        }
+        ctx.globalAlpha = p.alpha;
+        ctx.font        = `${p.sz}px Georgia, serif`;
+        ctx.fillStyle   = `hsl(${p.hue},65%,72%)`;
+        ctx.fillText(p.ch, p.x, p.y);
+      });
+      ctx.globalAlpha = 1;
+      if (frame === 95) {
+        phase = 2;
+        setTimeout(() => revealLine(0), 200);
+      }
+    } else {
+      // Tim đập + floaters
+      const t = performance.now()*0.001;
+      burst.forEach((p, i) => {
+        const pulse = 0.65 + 0.25*Math.sin(t*1.1 + i*0.08);
+        ctx.globalAlpha = pulse;
+        ctx.font        = `${p.sz*(0.9 + 0.12*Math.sin(t+i*0.15))}px Georgia, serif`;
+        ctx.fillStyle   = `hsl(${p.hue},65%,72%)`;
+        ctx.fillText(p.ch, p.tx, p.ty);
+      });
+      floaters.forEach(f => {
+        f.y+=f.vy; f.x+=f.dr;
+        if (f.y < -30) { f.y=H+10; f.x=Math.random()*W; }
+        ctx.globalAlpha = f.a*(0.7+0.3*Math.sin(t*0.8+f.ph));
+        ctx.font        = `${f.sz}px Georgia, serif`;
+        ctx.fillStyle   = '#e879a0';
+        ctx.fillText('♡', f.x, f.y);
+      });
+      ctx.globalAlpha = 1;
+    }
+  })();
+}
+</script>
+</body>
+</html>
