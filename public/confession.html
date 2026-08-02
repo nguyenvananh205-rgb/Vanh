@@ -75,14 +75,16 @@ html, body {
 #btn-no {
   position: fixed; z-index: 20;
   padding: 0.85rem 2rem;
-  background: var(--bg2);
-  color: var(--muted);
+  background: rgba(155,114,207,0.14);
+  color: #d8b4fe;
   font-family: Georgia, serif;
   font-size: 0.95rem;
-  border: 1px solid rgba(122,107,150,0.28);
+  border: 1.5px solid rgba(192,132,252,0.52);
   border-radius: 2rem;
   cursor: default;
-  transition: left 0.26s ease, top 0.26s ease, opacity 0.9s;
+  transition: left 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+              top  0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.9s;
   will-change: left, top;
 }
 
@@ -184,7 +186,7 @@ html, body {
 .s5-line.buildup {
   font-size: clamp(0.9rem, 2.8vw, 1.25rem);
   color: var(--text);
-  opacity: 0;
+  /* opacity kế thừa từ .s5-line — không khai báo lại để tránh lấn át .s5-line.show */
 }
 .s5-line.punchline {
   font-size: clamp(1.6rem, 6vw, 3rem);
@@ -442,23 +444,32 @@ function onActivate(n) {
   btnYes.textContent = CFG.q1.yes;
   btnNo.textContent  = CFG.q1.no;
 
-  let noX = innerWidth / 2 + 170, noY = innerHeight / 2 + 75;
+  let noX = innerWidth / 2 - 130, noY = innerHeight / 2 + 80;
   let lastFlee = 0;
 
   const placeNo = (x, y, anim) => {
     noX = x; noY = y;
     btnNo.style.transition = anim
-      ? 'left 0.26s ease, top 0.26s ease, opacity 0.9s'
+      ? 'left 0.55s cubic-bezier(0.34,1.56,0.64,1), top 0.55s cubic-bezier(0.34,1.56,0.64,1), opacity 0.9s'
       : 'opacity 0.9s';
     btnNo.style.left      = x + 'px';
     btnNo.style.top       = y + 'px';
     btnNo.style.transform = 'translate(-50%, -50%)';
   };
-  placeNo(noX, noY, false);
+
+  // Đặt vị trí đối xứng sau khi layout được render
+  requestAnimationFrame(() => {
+    const yRect = btnYes.getBoundingClientRect();
+    const yCx   = yRect.left + yRect.width / 2;
+    const yCy   = yRect.top  + yRect.height / 2;
+    // Gương ngang qua trung tâm màn hình
+    const mirrorX = innerWidth - yCx;
+    placeNo(mirrorX, yCy, false);
+  });
 
   const flee = () => {
     const now = Date.now();
-    if (now - lastFlee < 80) return;
+    if (now - lastFlee < 250) return;   // chậm hơn: throttle 250ms
     lastFlee = now;
     const M = 88, W = innerWidth, H = innerHeight;
     let nx, ny, tries = 0;
@@ -466,14 +477,14 @@ function onActivate(n) {
       nx = M + Math.random() * (W - 2*M);
       ny = M + Math.random() * (H - 2*M);
       tries++;
-    } while (Math.hypot(nx - noX, ny - noY) < 100 && tries < 30);
+    } while (Math.hypot(nx - noX, ny - noY) < 80 && tries < 30);
     placeNo(nx, ny, true);
   };
 
   addEventListener('mousemove', e => {
     if (curSlide !== 1) return;
     const r = btnNo.getBoundingClientRect();
-    if (Math.hypot(e.clientX - (r.left + r.width/2), e.clientY - (r.top + r.height/2)) < 130) flee();
+    if (Math.hypot(e.clientX - (r.left + r.width/2), e.clientY - (r.top + r.height/2)) < 120) flee();
   });
   btnNo.addEventListener('click',      flee);
   btnNo.addEventListener('touchstart', e => { e.preventDefault(); flee(); }, { passive: false });
@@ -487,53 +498,76 @@ function onActivate(n) {
    SLIDE 2 — wipe bụi
 ══════════════════════════════════════════════ */
 function initSlide2() {
-  const el = document.getElementById('q2-text');
-  el.innerHTML = '';
-  CFG.q2.forEach((line, i) => {
-    el.appendChild(document.createTextNode(line));
-    if (i < CFG.q2.length - 1) el.appendChild(document.createElement('br'));
-  });
-
+  // Text dùng canvas hoàn toàn (không dựa vào DOM layering)
   const canvas = document.getElementById('dust-canvas');
   const ctx    = canvas.getContext('2d');
   canvas.width = innerWidth; canvas.height = innerHeight;
   const W = canvas.width, H = canvas.height;
   const rng = Math.random.bind(Math);
 
-  // Nền bụi
-  ctx.fillStyle = '#0e0b1a';
-  ctx.fillRect(0, 0, W, H);
+  /* ── offText: nền tối + thơ được vẽ sẵn ── */
+  const offText = document.createElement('canvas');
+  offText.width = W; offText.height = H;
+  const tCtx = offText.getContext('2d');
+  tCtx.fillStyle = '#0e0b1a';
+  tCtx.fillRect(0, 0, W, H);
+
+  const fSize  = Math.min(26, Math.floor(W / 22));
+  const lineH  = fSize * 2.3;
+  const startY = H/2 - (CFG.q2.length * lineH)/2 + fSize;
+  tCtx.font        = `italic ${fSize}px Georgia, serif`;
+  tCtx.fillStyle   = '#f5e6d3';
+  tCtx.textAlign   = 'center';
+  tCtx.shadowBlur  = 22;
+  tCtx.shadowColor = 'rgba(200,169,126,0.45)';
+  CFG.q2.forEach((line, i) => tCtx.fillText(line, W/2, startY + i*lineH));
+  tCtx.shadowBlur = 0;
+
+  /* ── offDust: nền mờ + hạt bụi (che text) ── */
+  const offDust = document.createElement('canvas');
+  offDust.width = W; offDust.height = H;
+  const dCtx = offDust.getContext('2d');
+  dCtx.fillStyle = 'rgba(14,11,26,0.97)';
+  dCtx.fillRect(0, 0, W, H);
 
   const dustPalette = [
     [200,169,126], [180,148,90], [155,114,207], [232,121,160], [138,108,68]
   ];
   for (let i = 0; i < 5500; i++) {
     const [R,G,B] = dustPalette[Math.floor(rng() * dustPalette.length)];
-    ctx.beginPath();
-    ctx.arc(rng()*W, rng()*H, 0.8 + rng()*3.5, 0, Math.PI*2);
-    ctx.fillStyle = `rgba(${R},${G},${B},${0.1 + rng()*0.55})`;
-    ctx.fill();
+    dCtx.beginPath();
+    dCtx.arc(rng()*W, rng()*H, 0.8 + rng()*3.5, 0, Math.PI*2);
+    dCtx.fillStyle = `rgba(${R},${G},${B},${0.12 + rng()*0.55})`;
+    dCtx.fill();
   }
   for (let i = 0; i < 80; i++) {
     const x = rng()*W, y = rng()*H, r = 8 + rng()*22;
-    const grd = ctx.createRadialGradient(x,y,0,x,y,r);
-    grd.addColorStop(0, `rgba(200,169,126,${0.06 + rng()*0.09})`);
+    const grd = dCtx.createRadialGradient(x,y,0,x,y,r);
+    grd.addColorStop(0, `rgba(200,169,126,${0.06 + rng()*0.1})`);
     grd.addColorStop(1, 'transparent');
-    ctx.fillStyle = grd;
-    ctx.fillRect(x-r, y-r, r*2, r*2);
+    dCtx.fillStyle = grd;
+    dCtx.fillRect(x-r, y-r, r*2, r*2);
   }
+
+  /* ── Composite lên main canvas ── */
+  const composite = () => {
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(offText, 0, 0);   // text bên dưới
+    ctx.drawImage(offDust, 0, 0);   // bụi bên trên (transparent chỗ đã wipe → lộ text)
+  };
+  composite();
 
   const hint = document.getElementById('s2-hint');
   let down = false, started = false, strokes = 0;
   let timer = null;
-  const THRESHOLD = 150;
+  const THRESHOLD = 160;
 
   const advance = () => {
     clearTimeout(timer);
-    canvas.style.transition = 'opacity 2s ease';
+    canvas.style.transition = 'opacity 1.8s ease';
     canvas.style.opacity    = '0';
     hint.style.opacity      = '0';
-    setTimeout(() => goTo(3), 2200);
+    setTimeout(() => goTo(3), 2000);
   };
 
   const brush = (x, y) => {
@@ -542,15 +576,17 @@ function initSlide2() {
       hint.style.opacity = '0';
       timer = setTimeout(advance, 10000);
     }
-    ctx.globalCompositeOperation = 'destination-out';
-    for (let i = 0; i < 24; i++) {
-      const a = rng()*Math.PI*2, d = rng()*58;
-      ctx.beginPath();
-      ctx.arc(x + Math.cos(a)*d, y + Math.sin(a)*d, 5 + rng()*18, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(0,0,0,${0.35 + rng()*0.55})`;
-      ctx.fill();
+    // Xóa bụi trên offDust → chỗ xóa trở nên trong suốt → composite lộ text
+    dCtx.globalCompositeOperation = 'destination-out';
+    for (let i = 0; i < 26; i++) {
+      const a = rng()*Math.PI*2, d = rng()*60;
+      dCtx.beginPath();
+      dCtx.arc(x + Math.cos(a)*d, y + Math.sin(a)*d, 6 + rng()*20, 0, Math.PI*2);
+      dCtx.fillStyle = `rgba(0,0,0,${0.75 + rng()*0.25})`;
+      dCtx.fill();
     }
-    ctx.globalCompositeOperation = 'source-over';
+    dCtx.globalCompositeOperation = 'source-over';
+    composite();
     if (++strokes > THRESHOLD) advance();
   };
 
