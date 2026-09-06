@@ -1,0 +1,677 @@
+<title>Quyết Định Gia Hạn Tuổi Trẻ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Be+Vietnam+Pro:wght@400;600;800&display=swap">
+<style>
+  :root {
+    --desk: #CFC4AF;
+    --desk-2: #E6DDCB;
+    --paper: #FBF6EA;
+    --paper-2: #F2E9D6;
+    --ink: #2B2320;
+    --ink-soft: #6E6156;
+    --rule: #DCCCAF;
+    --seal: #B3271E;
+    --gold: #9A7B2E;
+    --ok: #4E7A3E;
+    --shadow: 0 18px 50px rgba(43, 35, 32, .28);
+    --serif: "Lora", "Times New Roman", Times, serif;
+    --sans: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --desk: #12100D;
+      --desk-2: #221C15;
+      --paper: #F4ECDC;
+      --paper-2: #EAE0CA;
+      --shadow: 0 22px 60px rgba(0, 0, 0, .6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --desk: #12100D;
+    --desk-2: #221C15;
+    --paper: #F4ECDC;
+    --paper-2: #EAE0CA;
+    --shadow: 0 22px 60px rgba(0, 0, 0, .6);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: radial-gradient(120% 90% at 50% 0%, var(--desk-2) 0%, var(--desk) 78%);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: var(--serif);
+    line-height: 1.6;
+    padding: clamp(16px, 4vw, 48px) clamp(12px, 4vw, 40px) 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+  }
+
+  /* ---------- tờ giấy ---------- */
+  .sheet {
+    width: min(780px, 100%);
+    background:
+      linear-gradient(var(--paper), var(--paper)) padding-box,
+      var(--paper);
+    box-shadow: var(--shadow);
+    padding: clamp(18px, 3.4vw, 30px);
+    position: relative;
+    border: 2px solid var(--seal);
+  }
+  .sheet::after {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 1px solid var(--seal);
+    opacity: .55;
+    pointer-events: none;
+  }
+  .inner { position: relative; padding: clamp(10px, 2.4vw, 22px); }
+
+  /* ---------- đầu văn bản ---------- */
+  .letterhead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 10px 18px;
+    text-align: center;
+    font-family: var(--sans);
+  }
+  .org { font-weight: 800; font-size: .82rem; letter-spacing: .04em; text-transform: uppercase; }
+  .dept { font-weight: 800; font-size: .9rem; letter-spacing: .04em; text-transform: uppercase; }
+  .motto { font-weight: 800; font-size: .9rem; letter-spacing: .02em; }
+  .under { display: inline-block; border-bottom: 1.5px solid var(--ink); padding-bottom: 3px; margin-top: 3px; }
+  .docno, .place {
+    font-family: var(--sans);
+    font-size: .78rem;
+    color: var(--ink-soft);
+    margin-top: 10px;
+  }
+  .place { font-family: var(--serif); font-style: italic; font-size: .88rem; }
+
+  /* ---------- tiêu đề ---------- */
+  .title { text-align: center; margin: 30px 0 6px; }
+  .title h1 {
+    font-size: clamp(1.7rem, 5vw, 2.5rem);
+    letter-spacing: .16em;
+    margin: 0;
+    font-weight: 700;
+    text-wrap: balance;
+  }
+  .title .sub {
+    font-size: .98rem;
+    margin: 10px auto 0;
+    max-width: 46ch;
+    text-wrap: balance;
+  }
+  .divider {
+    width: 92px;
+    height: 3px;
+    margin: 14px auto 0;
+    background: var(--ink);
+    position: relative;
+  }
+  .divider::before, .divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 7px; height: 7px;
+    background: var(--seal);
+    transform: translateY(-50%) rotate(45deg);
+  }
+  .divider::before { left: -16px; }
+  .divider::after { right: -16px; }
+
+  .issuer {
+    text-align: center;
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: .84rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin: 26px 0 16px;
+  }
+
+  /* ---------- thân văn bản ---------- */
+  .recital { margin: 0 0 8px; font-style: italic; text-align: justify; hyphens: auto; }
+  .recital:last-of-type { margin-bottom: 20px; }
+
+  .decides {
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: .3em;
+    font-size: 1.05rem;
+    margin: 24px 0 18px;
+  }
+
+  article { margin-bottom: 16px; text-align: justify; hyphens: auto; }
+  article h2 {
+    display: inline;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: var(--serif);
+  }
+  article h2::after { content: " "; }
+  article ol { margin: 8px 0 0; padding-left: 1.4em; }
+  article ol li { margin-bottom: 5px; }
+  article ol { list-style: none; counter-reset: alpha; padding-left: 1.6em; }
+  article ol li { counter-increment: alpha; position: relative; }
+  article ol li::before {
+    content: counter(alpha, lower-alpha) ")";
+    position: absolute;
+    left: -1.6em;
+    font-weight: 600;
+    color: var(--seal);
+  }
+
+  /* ---------- phụ lục kiểm định ---------- */
+  .appendix {
+    margin: 30px 0 6px;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 18px 0 20px;
+  }
+  .appendix h3 {
+    font-family: var(--sans);
+    font-size: .74rem;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+  }
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 30px; }
+  .metric { display: grid; grid-template-columns: 1fr auto; gap: 3px 12px; align-items: baseline; }
+  .metric .label { font-family: var(--sans); font-size: .8rem; }
+  .metric .value {
+    font-family: var(--sans);
+    font-size: .8rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .metric .bar {
+    grid-column: 1 / -1;
+    height: 5px;
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    overflow: hidden;
+  }
+  .metric .bar span { display: block; height: 100%; background: var(--ok); }
+  .metric.low .bar span { background: var(--seal); }
+  .metric.low .value { color: var(--seal); }
+  .metric .note { grid-column: 1 / -1; font-size: .82rem; font-style: italic; color: var(--ink-soft); }
+
+  /* ---------- lời chúc ---------- */
+  .wish {
+    margin: 26px 0 8px;
+    padding: 18px 20px;
+    background: var(--paper-2);
+    border-left: 4px solid var(--seal);
+  }
+  .wish h3 {
+    font-family: var(--sans);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+  }
+  #wishText {
+    margin: 0;
+    font-size: 1.12rem;
+    line-height: 1.55;
+    font-style: italic;
+    text-wrap: pretty;
+    min-height: 3.2em;
+  }
+
+  /* ---------- ký & dấu ---------- */
+  .signblock {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px;
+    margin-top: 34px;
+    align-items: start;
+  }
+  .recipients { font-family: var(--sans); font-size: .74rem; color: var(--ink-soft); }
+  .recipients strong { display: block; font-style: normal; margin-bottom: 5px; color: var(--ink); }
+  .recipients ul { margin: 0; padding-left: 1.1em; }
+  .signature { text-align: center; position: relative; font-family: var(--sans); }
+  .signature .role { font-weight: 800; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; }
+  .signature .note { font-style: italic; font-size: .78rem; color: var(--ink-soft); margin: 6px 0 46px; font-family: var(--serif); }
+  .signature .name { font-weight: 800; font-size: .95rem; letter-spacing: .04em; }
+
+  .seal {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    width: 152px;
+    height: 152px;
+    margin-left: -76px;
+    transform: rotate(-14deg);
+    opacity: .82;
+    pointer-events: none;
+  }
+  .seal circle, .seal path { fill: none; stroke: var(--seal); }
+  .seal text { fill: var(--seal); font-family: var(--sans); font-weight: 800; }
+
+  /* ---------- ô điền tên ---------- */
+  .fill {
+    font-weight: 700;
+    color: var(--seal);
+    border-bottom: 1.5px dotted var(--seal);
+    padding: 0 4px;
+    outline: none;
+    cursor: text;
+    white-space: nowrap;
+  }
+  .fill:focus { background: rgba(179, 39, 30, .09); border-bottom-style: solid; }
+
+  .hint {
+    font-family: var(--sans);
+    font-size: .74rem;
+    color: var(--ink-soft);
+    text-align: center;
+    margin-top: 14px;
+  }
+
+  /* ---------- bánh & nến ---------- */
+  .cake-stage { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 26px 0 4px; }
+  .cake { width: 156px; height: 108px; }
+  .flame { transform-origin: center bottom; animation: flicker .9s ease-in-out infinite alternate; }
+  @keyframes flicker {
+    from { transform: scale(1) translateY(0); opacity: 1; }
+    to   { transform: scale(1.14, .9) translateY(1px); opacity: .82; }
+  }
+  .cake.out .flame { opacity: 0; transition: opacity .45s ease; animation: none; }
+  .cake .smoke { opacity: 0; }
+  .cake.out .smoke { animation: rise 2.4s ease-out forwards; }
+  @keyframes rise {
+    0%   { opacity: .55; transform: translateY(0) scale(.6); }
+    100% { opacity: 0; transform: translateY(-26px) scale(1.5); }
+  }
+  #cakeMsg {
+    font-family: var(--sans);
+    font-size: .82rem;
+    color: var(--ink-soft);
+    text-align: center;
+    min-height: 1.4em;
+    text-wrap: balance;
+  }
+
+  /* ---------- thanh điều khiển ---------- */
+  .actions {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    box-shadow: var(--shadow);
+    z-index: 5;
+    max-width: calc(100vw - 24px);
+  }
+  .actions button {
+    font-family: var(--sans);
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--rule);
+    padding: 9px 14px;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .actions button:hover { background: var(--paper-2); border-color: var(--ink-soft); }
+  .actions button.primary { background: var(--seal); border-color: var(--seal); color: #FBF6EA; }
+  .actions button.primary:hover { background: #98201A; border-color: #98201A; }
+  .actions button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  #confetti {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 20;
+  }
+
+  @media (max-width: 620px) {
+    .letterhead { grid-template-columns: 1fr; }
+    .signblock { grid-template-columns: 1fr; }
+    .signature { margin-top: 10px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flame { animation: none; }
+    * { transition: none !important; }
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .actions, .hint, #confetti { display: none !important; }
+    .sheet { box-shadow: none; width: 100%; }
+  }
+</style>
+
+<main class="sheet">
+  <div class="inner">
+
+    <header class="letterhead">
+      <div>
+        <div class="org">Liên hiệp các Hội Bạn Thân</div>
+        <div class="dept"><span class="under">Cục Quản lý Tuổi tác &amp; Nhan sắc</span></div>
+        <div class="docno">Số: 26/2026/QĐ‑CQLTT</div>
+      </div>
+      <div>
+        <div class="motto">Vui vẻ – Ăn uống – Không nợ tiền</div>
+        <div class="under" aria-hidden="true" style="width:200px;max-width:100%;"></div>
+        <div class="place">Trên bàn nhậu, ngày <span id="dd">…</span> tháng <span id="mm">…</span> năm <span id="yy">…</span></div>
+      </div>
+    </header>
+
+    <div class="title">
+      <h1>QUYẾT ĐỊNH</h1>
+      <p class="sub">Về việc gia hạn giấy phép sử dụng tuổi trẻ đối với công dân
+        <span class="fill" id="nameField" contenteditable="true" spellcheck="false" role="textbox" aria-label="Tên bạn của bạn">NGUYỄN VĂN A</span>
+      </p>
+      <div class="divider"></div>
+    </div>
+
+    <p class="issuer">Cục trưởng Cục Quản lý Tuổi tác &amp; Nhan sắc</p>
+
+    <p class="recital">Căn cứ Nghị định 404/NĐ‑CP về việc <em>“không tìm thấy bất kỳ lý do nào để buồn trong ngày hôm nay”</em>;</p>
+    <p class="recital">Căn cứ Thông tư 01/TT‑BTN hướng dẫn quy trình thổi nến an toàn, không quá 03 (ba) lần cho một chiếc bánh;</p>
+    <p class="recital">Xét thành tích 365 ngày liên tục thức dậy thành công ở lần báo thức thứ bảy;</p>
+    <p class="recital">Xét đề nghị của Hội đồng Bạn Thân tại Biên bản họp lúc 2 giờ sáng ngoài quán trà đá, trong tình trạng không ai còn tỉnh táo nhưng tất cả đều đồng thuận,</p>
+
+    <p class="decides">QUYẾT ĐỊNH:</p>
+
+    <article>
+      <h2>Điều 1.</h2>
+      Gia hạn cho đương sự có tên trên đây quyền sử dụng tuổi trẻ thêm <strong>01 (một) năm</strong>, tính từ thời điểm ký. Không hoàn tiền, không đổi trả, không thắc mắc về số lượng nến trên bánh.
+    </article>
+
+    <article>
+      <h2>Điều 2.</h2>
+      Trong thời gian hiệu lực, đương sự được hưởng các quyền lợi sau:
+      <ol>
+        <li>Được chọn miếng bánh nhiều kem nhất mà không ai được nhắc chữ “béo”;</li>
+        <li>Được sai một lần trong ngày mà vẫn được công nhận là đúng;</li>
+        <li>Được ngủ nướng hợp pháp; hệ thống báo thức tạm ngưng phục vụ 24 giờ;</li>
+        <li>Được người khác trả tiền cà phê, tối đa 01 ly, không áp dụng cho size L và topping trân châu.</li>
+      </ol>
+    </article>
+
+    <article>
+      <h2>Điều 3.</h2>
+      Đi kèm quyền lợi là các nghĩa vụ bắt buộc:
+      <ol>
+        <li>Cười tối thiểu 20 lần/ngày, có kiểm tra đột xuất không báo trước;</li>
+        <li>Không được phát ngôn “tao già rồi” quá 02 lần/tuần;</li>
+        <li>Mở lời mời cơm bạn bè trong vòng 07 ngày kể từ ngày ký, hình thức: lẩu hoặc nướng.</li>
+      </ol>
+    </article>
+
+    <article>
+      <h2>Điều 4.</h2>
+      Quyết định này có hiệu lực kể từ giây phút đương sự đọc đến dòng này. Các văn bản trước đây trái với Quyết định này đều bị bãi bỏ, <em>riêng câu “tuổi tác chỉ là một con số” vẫn tiếp tục có hiệu lực vô thời hạn.</em>
+    </article>
+
+    <section class="appendix">
+      <h3>Phụ lục I — Biên bản kiểm định định kỳ</h3>
+      <div class="metrics">
+        <div class="metric">
+          <span class="label">Chỉ số nhan sắc</span>
+          <span class="value">98%</span>
+          <span class="bar"><span style="width:98%"></span></span>
+          <span class="note">Đã trừ hao phần chỉnh sửa ảnh.</span>
+        </div>
+        <div class="metric low">
+          <span class="label">Dung lượng pin xã hội</span>
+          <span class="value">12%</span>
+          <span class="bar"><span style="width:12%"></span></span>
+          <span class="note">Đang sạc. Vui lòng không rủ đi chơi đông người.</span>
+        </div>
+        <div class="metric low">
+          <span class="label">Khả năng dậy sớm</span>
+          <span class="value">3%</span>
+          <span class="bar"><span style="width:3%"></span></span>
+          <span class="note">Không có dấu hiệu phục hồi qua các năm.</span>
+        </div>
+        <div class="metric">
+          <span class="label">Số lần hứa đi tập gym</span>
+          <span class="value">47 lần</span>
+          <span class="bar"><span style="width:94%"></span></span>
+          <span class="note">Tỷ lệ thực hiện: 0%. Hồ sơ vẫn được lưu.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="wish">
+      <h3>Phụ lục II — Lời chúc chính thức kèm theo</h3>
+      <p id="wishText">Chúc mày năm nay mở ví ra là thấy nhiều hơn lần trước, soi gương là thấy trẻ hơn hôm qua, còn deadline thì tự động dời sang tuần sau.</p>
+    </section>
+
+    <div class="cake-stage">
+      <svg class="cake" id="cake" viewBox="0 0 156 108" role="img" aria-label="Bánh sinh nhật ba nến">
+        <g class="smoke" fill="var(--ink-soft)">
+          <circle cx="46" cy="26" r="3"></circle>
+          <circle cx="78" cy="22" r="3.4"></circle>
+          <circle cx="110" cy="26" r="3"></circle>
+        </g>
+        <g class="flame" fill="#E8A21C">
+          <path d="M46 20c5 5 6 9 3 12s-8 2-9-2 3-7 6-10z"></path>
+          <path d="M78 16c5 5 6 9 3 12s-8 2-9-2 3-7 6-10z"></path>
+          <path d="M110 20c5 5 6 9 3 12s-8 2-9-2 3-7 6-10z"></path>
+        </g>
+        <g fill="var(--seal)">
+          <rect x="44" y="32" width="4" height="18"></rect>
+          <rect x="76" y="28" width="4" height="22"></rect>
+          <rect x="108" y="32" width="4" height="18"></rect>
+        </g>
+        <rect x="20" y="50" width="116" height="22" fill="var(--paper-2)" stroke="var(--ink)" stroke-width="2"></rect>
+        <rect x="14" y="72" width="128" height="26" fill="var(--paper-2)" stroke="var(--ink)" stroke-width="2"></rect>
+        <path d="M20 50c8 8 16 0 24 8s16 0 24 8" fill="none" stroke="var(--seal)" stroke-width="2" opacity=".6"></path>
+        <path d="M68 66c8-8 16 0 24-8s16 0 24 8" fill="none" stroke="var(--seal)" stroke-width="2" opacity=".6"></path>
+      </svg>
+      <p id="cakeMsg">Còn 3 ngọn nến đang chờ được xử lý.</p>
+    </div>
+
+    <div class="signblock">
+      <div class="recipients">
+        <strong>Nơi nhận:</strong>
+        <ul>
+          <li>Như Điều 1 (để thực hiện);</li>
+          <li>Nhóm chat “Ăn gì hôm nay” (để trêu);</li>
+          <li>Lưu: VT, tủ lạnh.</li>
+        </ul>
+      </div>
+      <div class="signature">
+        <svg class="seal" viewBox="0 0 200 200" aria-hidden="true">
+          <circle cx="100" cy="100" r="92" stroke-width="4"></circle>
+          <circle cx="100" cy="100" r="80" stroke-width="1.5"></circle>
+          <path id="sealArcTop" d="M100 100 m -62,0 a 62,62 0 1,1 124,0"></path>
+          <path id="sealArcBot" d="M100 100 m -62,0 a 62,62 0 1,0 124,0"></path>
+          <text font-size="15" letter-spacing="2.4">
+            <textPath href="#sealArcTop" startOffset="50%" text-anchor="middle">CỤC QUẢN LÝ TUỔI TÁC</textPath>
+          </text>
+          <text font-size="13" letter-spacing="2">
+            <textPath href="#sealArcBot" startOffset="50%" text-anchor="middle">NHAN SẮC • 2026</textPath>
+          </text>
+          <text x="100" y="94" font-size="24" text-anchor="middle" letter-spacing="1">ĐÃ</text>
+          <text x="100" y="120" font-size="24" text-anchor="middle" letter-spacing="1">DUYỆT</text>
+        </svg>
+        <div class="role">TM. Hội đồng Bạn Thân<br>Cục trưởng</div>
+        <p class="note">(đã ký và đã ăn hết phần bánh)</p>
+        <div class="name"><span class="fill" id="signerField" contenteditable="true" spellcheck="false" role="textbox" aria-label="Tên người ký">THẰNG BẠN THÂN</span></div>
+      </div>
+    </div>
+
+    <p class="hint">Bấm thẳng vào phần chữ đỏ để sửa tên — bản sửa được lưu lại trên máy bạn.</p>
+  </div>
+</main>
+
+<div class="actions">
+  <button type="button" id="blowBtn" class="primary">Thổi nến</button>
+  <button type="button" id="wishBtn">Đổi lời chúc</button>
+  <button type="button" id="printBtn">In / Lưu PDF</button>
+</div>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- ngày tháng ---------- */
+  var now = new Date();
+  document.getElementById("dd").textContent = now.getDate();
+  document.getElementById("mm").textContent = now.getMonth() + 1;
+  document.getElementById("yy").textContent = now.getFullYear();
+
+  /* ---------- ô điền tên, lưu localStorage ---------- */
+  ["nameField", "signerField"].forEach(function (id) {
+    var el = document.getElementById(id);
+    var key = "bday." + id;
+    try {
+      var saved = localStorage.getItem(key);
+      if (saved) { el.textContent = saved; }
+    } catch (e) { /* trình duyệt chặn lưu — vẫn chạy bình thường */ }
+
+    el.addEventListener("input", function () {
+      try { localStorage.setItem(key, el.textContent.trim()); } catch (e) {}
+    });
+    el.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter") { ev.preventDefault(); el.blur(); }
+    });
+    el.addEventListener("paste", function (ev) {
+      ev.preventDefault();
+      var text = (ev.clipboardData || window.clipboardData).getData("text").replace(/\s+/g, " ");
+      document.execCommand("insertText", false, text);
+    });
+  });
+
+  /* ---------- lời chúc ---------- */
+  var wishes = [
+    "Chúc mày năm nay giàu tới mức người ta hỏi “sao dạo này ít thấy đăng bài” — vì bận đếm tiền.",
+    "Chúc tuổi mới: tóc ở lại, mỡ ra đi, lương tăng, sếp im lặng.",
+    "Chúc mày mở ví ra là thấy nhiều hơn lần trước, soi gương là thấy trẻ hơn hôm qua.",
+    "Chúc mày deadline tự chạy, wifi bốn vạch, cà phê không bao giờ nguội.",
+    "Chúc mày ăn gì cũng ngon, mua gì cũng sale, đi đâu cũng có người trả tiền hộ.",
+    "Chúc mày sống lâu trăm tuổi, riêng nhan sắc thì xin dừng lại đúng ở đây thôi.",
+    "Chúc mày tìm được người thương mày bằng đúng cái tình mày dành cho cái giường.",
+    "Chúc mày một năm không drama; nếu có thì mày là khán giả, không phải nhân vật chính.",
+    "Chúc mày mỗi sáng mở mắt ra đều thấy tài khoản báo có, chứ không phải báo cáo.",
+    "Chúc mày đủ khỏe để đi làm nuôi ước mơ, và đủ tỉnh để nhớ hôm nay tới lượt mày trả tiền."
+  ];
+  var wishEl = document.getElementById("wishText");
+  var lastWish = -1;
+
+  function nextWish() {
+    var i = lastWish;
+    while (i === lastWish && wishes.length > 1) { i = Math.floor(Math.random() * wishes.length); }
+    lastWish = i;
+    wishEl.style.opacity = "0";
+    setTimeout(function () {
+      wishEl.textContent = wishes[i];
+      wishEl.style.opacity = "1";
+    }, 140);
+  }
+  wishEl.style.transition = "opacity .25s ease";
+  document.getElementById("wishBtn").addEventListener("click", nextWish);
+
+  /* ---------- thổi nến ---------- */
+  var cake = document.getElementById("cake");
+  var cakeMsg = document.getElementById("cakeMsg");
+  var blowBtn = document.getElementById("blowBtn");
+  var blown = false;
+
+  blowBtn.addEventListener("click", function () {
+    if (!blown) {
+      blown = true;
+      cake.classList.add("out");
+      cakeMsg.textContent = "Điều ước đã được tiếp nhận. Hồ sơ đang chờ xử lý, dự kiến trả kết quả sau 3–5 năm làm việc.";
+      blowBtn.textContent = "Thắp lại nến";
+      burst(160);
+    } else {
+      blown = false;
+      cake.classList.remove("out");
+      cakeMsg.textContent = "Nến đã được thắp lại. Ước thêm lần nữa cũng không ai kiểm tra đâu.";
+      blowBtn.textContent = "Thổi nến";
+    }
+  });
+
+  document.getElementById("printBtn").addEventListener("click", function () { window.print(); });
+
+  /* ---------- confetti ---------- */
+  var canvas = document.getElementById("confetti");
+  var ctx = canvas.getContext("2d");
+  var pieces = [];
+  var running = false;
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var colors = ["#B3271E", "#E8A21C", "#4E7A3E", "#9A7B2E", "#2B2320"];
+
+  function resize() {
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  function burst(count) {
+    if (reduced) { return; }
+    var w = window.innerWidth;
+    for (var i = 0; i < count; i++) {
+      pieces.push({
+        x: w / 2 + (Math.random() - 0.5) * w * 0.7,
+        y: -20 - Math.random() * 120,
+        vx: (Math.random() - 0.5) * 2.2,
+        vy: 2 + Math.random() * 3,
+        w: 5 + Math.random() * 6,
+        h: 8 + Math.random() * 8,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - 0.5) * 0.2,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      });
+    }
+    if (!running) { running = true; requestAnimationFrame(tick); }
+  }
+
+  function tick() {
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    var h = window.innerHeight;
+    for (var i = pieces.length - 1; i >= 0; i--) {
+      var p = pieces[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.045;
+      p.rot += p.vr;
+      if (p.y > h + 40) { pieces.splice(i, 1); continue; }
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+    if (pieces.length) {
+      requestAnimationFrame(tick);
+    } else {
+      running = false;
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    }
+  }
+})();
+</script>
