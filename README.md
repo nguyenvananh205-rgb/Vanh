@@ -67,4 +67,4 @@ Tính năng nhận diện ảnh và gợi ý dùng Claude API. Người dùng t�
 App là web tĩnh, đường dẫn gốc lấy từ biến `VITE_BASE_PATH` (mặc định `/`).
 
 - **Vercel / Netlify**: import repo, framework **Vite**, thêm `VITE_SUPABASE_URL` và `VITE_SUPABASE_ANON_KEY`. Không cần đặt `VITE_BASE_PATH`.
-- **GitHub Pages**: workflow `.github/workflows/deploy.yml` build với `VITE_BASE_PATH=/Vanh/` mỗi khi push lên `main`. Chỉ chạy được khi repo public hoặc tài khoản GitHub Pro.
+- **GitHub Pages**: workflow `.github/workflows/deploy.yml` build với `VITE_BASE_PATH=/tu-lanh-gia-dinh/` mỗi khi push lên `main`. Chỉ chạy được khi repo public hoặc tài khoản GitHub Pro.
