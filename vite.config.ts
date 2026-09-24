@@ -2,8 +2,11 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// GitHub Pages (repo Vanh) cần VITE_BASE_PATH=/Vanh/; Vercel/Netlify/máy local để mặc định "/".
+const base = process.env.VITE_BASE_PATH ?? '/'
+
 export default defineConfig({
-  base: '/Vanh/',
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -18,8 +21,8 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         lang: 'vi',
-        start_url: '/Vanh/',
-        scope: '/Vanh/',
+        start_url: base,
+        scope: base,
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
