@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// GitHub Pages (repo Vanh) cần VITE_BASE_PATH=/tu-lanh-gia-dinh/; Vercel/Netlify/máy local để mặc định "/".
+// GitHub Pages (repo tu-lanh-gia-dinh) cần VITE_BASE_PATH=/tu-lanh-gia-dinh/; Vercel/Netlify/máy local để mặc định "/".
 const base = process.env.VITE_BASE_PATH ?? '/'
 
 export default defineConfig({
